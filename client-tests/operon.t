@@ -37,11 +37,11 @@ teardown();
 
 # write your tests as subroutnes, add the sub name to @tests
 sub test1 {
-	require_ok("Bio::KBase::OperonService::Client");
+	require_ok("Bio::KBase::ProteinInfoService::Client");
 }
 
 sub test2 {
-	$client = new_ok("Bio::KBase::OperonService::Client", ["http://localhost:7057"]);
+	$client = new_ok("Bio::KBase::ProteinInfoService::Client", ["http://localhost:7057"]);
 }
 
 sub test3 {
