@@ -235,13 +235,13 @@ sub fids_to_domains
 		foreach my $fid (keys %$fids2externalIds)
 		{
 			my $sql='SELECT DISTINCT locusId,domainId FROM Locus2Domain WHERE
-				locusId IN (';
-			my $placeholders='?,' x (@{$fids2externalIds->{$fid}});
-			chop $placeholders;
-			$sql.=$placeholders.')';
+				locusId = ?';
+#			my $placeholders='?,' x (@{$fids2externalIds->{$fid}});
+#			chop $placeholders;
+#			$sql.=$placeholders.')';
 		
 			my $sth=$moDbh->prepare($sql);
-			$sth->execute(@{$fids2externalIds->{$fid}});
+			$sth->execute($fids2externalIds->{$fid}[0]);
 			while (my $row=$sth->fetch)
 			{
 				warn join ' : ',@$row;
