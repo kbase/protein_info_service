@@ -244,7 +244,6 @@ sub fids_to_domains
 			$sth->execute($fids2externalIds->{$fid}[0]);
 			while (my $row=$sth->fetch)
 			{
-				warn join ' : ',@$row;
 				push @{$return->{$fid}},$row->[1];
 			}
 
@@ -324,6 +323,44 @@ sub domains_to_fids
     my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
     my($return);
     #BEGIN domains_to_fids
+	
+	$return={};
+	
+	my $moDbh=$self->{moDbh};
+	my $kbMOT=$self->{kbMOT};
+
+	if (scalar @$domain_ids)
+	{
+
+		# again, not ideal, but at least workable
+		foreach my $domainId (@$domain_ids)
+		{
+			my $sql='SELECT DISTINCT locusId FROM Locus2Domain WHERE
+				domainId = ?';
+		
+			my $sth=$moDbh->prepare($sql);
+			$sth->execute($domainId);
+			my @externalIds;
+			while (my $row=$sth->fetch)
+			{
+				push @externalIds,$row->[0];
+			}
+
+			my $extIds2fids=$kbMOT->moLocusIds_to_fids(\@externalIds);
+			my $domain_fids={};
+			foreach my $extId (keys %$extIds2fids)
+			{
+				# this is an arrayref
+				my $fids=$extIds2fids->{$extId};
+				map {$domain_fids->{$_} = $_} @$fids;
+			}
+
+			my @domain_fids=keys $domain_fids;
+			$return->{$domain_id} = \@domain_fids;
+		}
+
+	}
+	
     #END domains_to_fids
     my @_bad_returns;
     (ref($return) eq 'HASH') or push(@_bad_returns, "Invalid type for return variable \"return\" (value was \"$return\")");

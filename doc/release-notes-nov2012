@@ -4,7 +4,11 @@ include annotations currently found in MicrobesOnline but are not
 yet in KBase.)
 
 We currently have a draft specification file and some methods
-working.
+partially working:
+
+fids_to_domains returns HMM domains for a fid (no COG or FastBLAST yet)
+fids_to_operons returns a poor structure (references locusIds still, not
+	organized by genome)
 
 The next release should have a first draft of working code for
 all the methods of the protein_info service.

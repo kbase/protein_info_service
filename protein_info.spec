@@ -15,7 +15,7 @@ module ProteinInfo {
 	A domainId is an identifier of a protein domain or family
 	(e.g., COG593, TIGR00362). Most of these are stable identifiers
 	that come from external curated libraries, such as COG or InterPro,
-	but some are unstable identifiers that come from automated
+	but some may be unstable identifiers that come from automated
 	analyses like FastBLAST.
 	*/
 	typedef string domain_id;
