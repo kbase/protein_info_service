@@ -356,7 +356,7 @@ sub domains_to_fids
 			}
 
 			my @domain_fids=keys $domain_fids;
-			$return->{$domain_id} = \@domain_fids;
+			$return->{$domainId} = \@domain_fids;
 		}
 
 	}
