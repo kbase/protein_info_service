@@ -234,7 +234,7 @@ sub fids_to_domains
 		my $domains={};
 		my $sql='SELECT DISTINCT locusId,domainId FROM Locus2Domain WHERE
 			locusId IN (';
-		my $placeholders='?,' x (scalar @$externalIds);
+		my $placeholders='?,' x (scalar values %$externalIds);
 		chop $placeholders;
 		$sql.=$placeholders.')';
 		
@@ -242,6 +242,7 @@ sub fids_to_domains
 		$sth->execute(@$externalIds);
 		while (my $row=$sth->fetch)
 		{
+			warn join ' : ',@$row;
 			push @{$return->{$row->[0]}},$row->[1];
 		}
 
