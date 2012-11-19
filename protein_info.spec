@@ -61,8 +61,8 @@ module ProteinInfo {
 	*/
 	funcdef fids_to_synonyms (list<fid> fids ) returns (mapping<fid, synonyms>);
 
-	funcdef fids_to_ec (list<fid> fids) returns (mapping<fid,ec>)
-	funcdef fids_to_go (list<fid> fids) returns (mapping<fid,go>)
-	funcdef fids_to_ipr (list<fid> fids) returns (mapping<fid,ipr>)
+	funcdef fids_to_ec (list<fid> fids) returns (mapping<fid,ec>);
+	funcdef fids_to_go (list<fid> fids) returns (mapping<fid,go>);
+	funcdef fids_to_ipr (list<fid> fids) returns (mapping<fid,ipr>);
 
 };
