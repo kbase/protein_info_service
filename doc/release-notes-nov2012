@@ -1,0 +1,12 @@
+The protein_info service returns certain protein annotations about
+fids, such as domain assignments, operons, and orthologs.  (These
+include annotations currently found in MicrobesOnline but are not
+yet in KBase.)
+
+We currently have a draft specification file, but no working code.
+
+The next release should have a first draft of working code for
+the protein_info service.
+
+Future releases should try to add more methods, and begin to
+author the ER model to include the data types directly in KBase.
