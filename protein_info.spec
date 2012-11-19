@@ -42,19 +42,19 @@ module ProteinInfo {
 	ids and returns a mapping of each fid to the operon
 	in which it is found 
 	*/
-	funcdef fids_to_operons (list<fid> fids ) returns (mapping<fid, operon>);
+	funcdef fids_to_operons (list<fid> fids) returns (mapping<fid, operon>);
 
 	/*
 	fids_to_domains takes as input a list of feature ids, and
 	returns a mapping of each fid to its domains. (This includes COG,
 	even though COG is not part of InterProScan.)
 	*/
-	funcdef fids_to_domains (list<fid> fids ) returns (mapping<fid, list<domain_id>>);
+	funcdef fids_to_domains (list<fid> fids) returns (mapping<fid, list<domain_id>>);
 
-	funcdef domains_to_fids (list<domain_id> domain_ids ) returns (mapping<domain_id, list<fid>>);
+	funcdef domains_to_fids (list<domain_id> domain_ids) returns (mapping<domain_id, list<fid>>);
 
 
-	funcdef fids_to_orthologs (list<fid> fids ) returns (mapping<fid, orthologs>);
+	funcdef fids_to_orthologs (list<fid> fids) returns (mapping<fid, orthologs>);
 
 	/*
 	this might be more appropriate for the translation service
