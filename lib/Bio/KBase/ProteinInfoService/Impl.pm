@@ -230,6 +230,8 @@ sub fids_to_domains
 		my $kbMOT=$self->{kbMOT};
 
 		my $externalIds=$kbMOT->fids_to_moLocusIds($fids);
+		# reverse map ids
+		my %extIds2fids=map {$externalIds->{$_} = $_}, keys %$externalIds;
 
 		my $domains={};
 		my $sql='SELECT DISTINCT locusId,domainId FROM Locus2Domain WHERE
@@ -239,11 +241,11 @@ sub fids_to_domains
 		$sql.=$placeholders.')';
 		
 		my $sth=$moDbh->prepare($sql);
-		$sth->execute(@$externalIds);
+		$sth->execute(values %$externalIds);
 		while (my $row=$sth->fetch)
 		{
 			warn join ' : ',@$row;
-			push @{$return->{$row->[0]}},$row->[1];
+			push @{$return->{$extIds2fids{$row->[0]}}},$row->[1];
 		}
 
 	}
