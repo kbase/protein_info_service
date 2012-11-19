@@ -218,6 +218,38 @@ sub fids_to_domains
     my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
     my($return);
     #BEGIN fids_to_domains
+
+	$return={};
+
+	if (scalar @$fids)
+	{
+		my $ctxA = ContextAdapter->new($ctx);
+		my $user_token = $ctxA->user_token();
+
+		my $moDbh=$self->{moDbh};
+		my $kbMOT=$self->{kbMOT};
+
+		my $externalIds=$kbMOT->fids_to_moLocusIds($fids);
+
+		my $domains={};
+		my $sql='SELECT DISTINCT locusId,domainId FROM Locus2Domain WHERE
+			locusId IN (';
+		my $placeholders='?,' x (scalar @$externalIds);
+		chop $placeholders;
+		$sql.=$placeholders.')';
+		
+		my $sth=$moDbh->prepare($sql);
+		$sth->execute(@$externalIds);
+		while (my $row=$sth->fetch)
+		{
+			push @{$return->{$row->[0]}},$row->[1];
+		}
+
+	}
+
+
+
+
     #END fids_to_domains
     my @_bad_returns;
     (ref($return) eq 'HASH') or push(@_bad_returns, "Invalid type for return variable \"return\" (value was \"$return\")");

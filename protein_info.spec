@@ -36,6 +36,7 @@ module ProteinInfo {
 	typedef list<fid> orthologs;
 
 	typedef list<string> synonyms;
+	typedef list<string> domains;
 
 	/*
 	fids_to_operons takes as input a list of feature
@@ -49,10 +50,9 @@ module ProteinInfo {
 	returns a mapping of each fid to its domains. (This includes COG,
 	even though COG is not part of InterProScan.)
 	*/
-	funcdef fids_to_domains (list<fid> fids) returns (mapping<fid, list<domain_id>>);
+	funcdef fids_to_domains (list<fid> fids) returns (mapping<fid, domains>);
 
-	funcdef domains_to_fids (list<domain_id> domain_ids) returns (mapping<domain_id, list<fid>>);
-
+	funcdef domains_to_fids (domains domain_ids) returns (mapping<domain_id, list<fid>>);
 
 	funcdef fids_to_orthologs (list<fid> fids) returns (mapping<fid, orthologs>);
 
