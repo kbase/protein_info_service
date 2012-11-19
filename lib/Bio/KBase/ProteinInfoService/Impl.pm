@@ -346,17 +346,20 @@ sub domains_to_fids
 				push @externalIds,$row->[0];
 			}
 
-			my $extIds2fids=$kbMOT->moLocusIds_to_fids(\@externalIds);
-			my $domain_fids={};
-			foreach my $extId (keys %$extIds2fids)
+			if (scalar @externalIds)
 			{
-				# this is an arrayref
-				my $fids=$extIds2fids->{$extId};
-				map {$domain_fids->{$_} = $_} @$fids;
-			}
+				my $extIds2fids=$kbMOT->moLocusIds_to_fids(\@externalIds);
+				my $domain_fids={};
+				foreach my $extId (keys %$extIds2fids)
+				{
+					# this is an arrayref
+					my $fids=$extIds2fids->{$extId};
+					map {$domain_fids->{$_} = $_} @$fids;
+				}
 
-			my @domain_fids=keys $domain_fids;
-			$return->{$domainId} = \@domain_fids;
+				my @domain_fids=keys $domain_fids;
+				$return->{$domainId} = \@domain_fids;
+			}
 		}
 
 	}
