@@ -231,7 +231,7 @@ sub fids_to_domains
 
 		my $externalIds=$kbMOT->fids_to_moLocusIds($fids);
 		# reverse map ids
-		my %extIds2fids=map {$externalIds->{$_} = $_}, keys %$externalIds;
+		my %extIds2fids=map { $externalIds->{$_} = $_ } keys %$externalIds;
 
 		my $domains={};
 		my $sql='SELECT DISTINCT locusId,domainId FROM Locus2Domain WHERE
