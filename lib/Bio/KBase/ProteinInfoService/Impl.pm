@@ -229,25 +229,26 @@ sub fids_to_domains
 		my $moDbh=$self->{moDbh};
 		my $kbMOT=$self->{kbMOT};
 
-		my $externalIds=$kbMOT->fids_to_moLocusIds($fids);
-		# reverse map ids
-		my %extIds2fids=map { $externalIds->{$_} = $_ } keys %$externalIds;
+		my $fids2externalIds=$kbMOT->fids_to_moLocusIds($fids);
 
-		my $domains={};
-		my $sql='SELECT DISTINCT locusId,domainId FROM Locus2Domain WHERE
-			locusId IN (';
-		my $placeholders='?,' x (scalar values %$externalIds);
-		chop $placeholders;
-		$sql.=$placeholders.')';
-		
-		my $sth=$moDbh->prepare($sql);
-		$sth->execute(values %$externalIds);
-		while (my $row=$sth->fetch)
+		# this is not the best way, but should work
+		foreach my $fid (keys %$fids2externalIds)
 		{
-			warn join ' : ',@$row;
-			push @{$return->{$extIds2fids{$row->[0]}}},$row->[1];
-		}
+			my $sql='SELECT DISTINCT locusId,domainId FROM Locus2Domain WHERE
+				locusId IN (';
+			my $placeholders='?,' x (@{$fids2externalIds->{$fid}});
+			chop $placeholders;
+			$sql.=$placeholders.')';
+		
+			my $sth=$moDbh->prepare($sql);
+			$sth->execute(@{$fids2externalIds->{$fid}});
+			while (my $row=$sth->fetch)
+			{
+				warn join ' : ',@$row;
+				push @{$return->{$fid}},$row->[1];
+			}
 
+		}
 	}
 
 
