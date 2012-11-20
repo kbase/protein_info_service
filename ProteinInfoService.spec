@@ -1,7 +1,6 @@
 /*
-This module provides various annotations about proteins.
-
-should these methods provide other data, like coordinates of a hit?
+This module provides various annotations about proteins, including
+domain annotations, orthologs in other genomes, and operons.
 */
 
 module ProteinInfo {
@@ -12,16 +11,33 @@ module ProteinInfo {
 	typedef string fid;
 	
 	/*
-	A domainId is an identifier of a protein domain or family
+	A domain_id is an identifier of a protein domain or family
 	(e.g., COG593, TIGR00362). Most of these are stable identifiers
-	that come from external curated libraries, such as COG or InterPro,
+	that come from external curated libraries, such as COG or InterProScan,
 	but some may be unstable identifiers that come from automated
-	analyses like FastBLAST.
+	analyses like FastBLAST. (The current implementation includes only
+	COG and InterProScan's HMM libraries, such as TIGRFam and Pfam.)
 	*/
 	typedef string domain_id;
 
+	/*
+	Domains are a list of domain_ids.
+	*/
+	typedef list<string> domains;
+
+	/*
+	ECs are a list of Enzyme Commission identifiers.
+	*/
 	typedef list<string> ec;
+
+	/*
+	GOs are a list of Gene Ontology identifiers.
+	*/
 	typedef list<string> go;
+
+	/*
+	IPRs are a list of InterPro identifiers.
+	*/
 	typedef list<string> ipr;
 
 	/*
@@ -35,13 +51,11 @@ module ProteinInfo {
 	*/
 	typedef list<fid> orthologs;
 
-	typedef list<string> synonyms;
-	typedef list<string> domains;
-
 	/*
 	fids_to_operons takes as input a list of feature
 	ids and returns a mapping of each fid to the operon
-	in which it is found 
+	in which it is found. (It is currently not properly
+	implemented.)
 	*/
 	funcdef fids_to_operons (list<fid> fids) returns (mapping<fid, operon>);
 
@@ -52,17 +66,31 @@ module ProteinInfo {
 	*/
 	funcdef fids_to_domains (list<fid> fids) returns (mapping<fid, domains>);
 
+	/*
+	domains_to_fids takes as input a list of domain_ids, and
+	returns a mapping of each domain_id to the fids which have that
+	domain. (This includes COG, even though COG is not part of
+	InterProScan.)
 	funcdef domains_to_fids (domains domain_ids) returns (mapping<domain_id, list<fid>>);
 
+	/*
+	fids_to_ipr is currently not implemented.
+	*/
+	funcdef fids_to_ipr (list<fid> fids) returns (mapping<fid,ipr>);
+
+	/*
+	fids_to_orthologs is currently not implemented.
+	*/
 	funcdef fids_to_orthologs (list<fid> fids) returns (mapping<fid, orthologs>);
 
 	/*
-	this might be more appropriate for the translation service
+	fids_to_ec is currently not implemented.
 	*/
-	funcdef fids_to_synonyms (list<fid> fids ) returns (mapping<fid, synonyms>);
-
 	funcdef fids_to_ec (list<fid> fids) returns (mapping<fid,ec>);
+
+	/*
+	fids_to_go is currently not implemented.
+	*/
 	funcdef fids_to_go (list<fid> fids) returns (mapping<fid,go>);
-	funcdef fids_to_ipr (list<fid> fids) returns (mapping<fid,ipr>);
 
 };
