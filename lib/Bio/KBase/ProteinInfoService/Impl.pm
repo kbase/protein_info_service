@@ -138,9 +138,8 @@ sub fids_to_operons
                                                     GROUP BY o2.locusId';
 			# be lazy: just look at the first MOL returned
 			# [0] is the external db; should check if it's MOL:Feature
-			my $operonLocusIdList=$moDbh->selectcol_arrayref($operonSql,{},$externalIds->{$kbId}[1]);
+			my $operonLocusIdList=$moDbh->selectcol_arrayref($operonSql,{},$externalIds->{$kbId}[1]) || [];
 			my @kbaseIds=$kbMOT->moLocusIds_to_fids($operonLocusIdList);
-			#my @kbaseIds=values %{$kbIdServer->external_ids_to_kbase_ids('MOL:Feature',$operonLocusIdList)};
 			$operons->{$kbId}=\@kbaseIds;
 		}
 		$return=$operons|| {};
