@@ -335,15 +335,29 @@ sub domains_to_fids
 		# again, not ideal, but at least workable
 		foreach my $domainId (@$domain_ids)
 		{
-			my $sql='SELECT DISTINCT locusId FROM Locus2Domain WHERE
+			my $domainSql='SELECT DISTINCT locusId FROM Locus2Domain WHERE
 				domainId = ?';
 		
-			my $sth=$moDbh->prepare($sql);
-			$sth->execute($domainId);
+			my $domainSth=$moDbh->prepare($domainSql);
+			$domainSth->execute($domainId);
 			my @externalIds;
-			while (my $row=$sth->fetch)
+			while (my $row=$domainSth->fetch)
 			{
 				push @externalIds,$row->[0];
+			}
+
+			my ($cogInfoId)=$domainId=~/^COG(\d+)$/;
+			if ($cogInfoId)
+			{
+				my $cogSql='SELECT DISTINCT locusId FROM COG WHERE
+					cogInfoId = ?';
+		
+				my $cogSth=$moDbh->prepare($cogSql);
+				$cogSth->execute($cogInfoId);
+				while (my $row=$cogSth->fetch)
+				{
+					push @externalIds,$row->[0];
+				}
 			}
 
 			if (scalar @externalIds)
