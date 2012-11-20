@@ -234,24 +234,31 @@ sub fids_to_domains
 		# this is not the best way, but should work
 		foreach my $fid (keys %$fids2externalIds)
 		{
-			my $sql='SELECT DISTINCT locusId,domainId FROM Locus2Domain WHERE
+			my $domainSql='SELECT DISTINCT locusId,domainId FROM Locus2Domain WHERE
 				locusId = ?';
 #			my $placeholders='?,' x (@{$fids2externalIds->{$fid}});
 #			chop $placeholders;
 #			$sql.=$placeholders.')';
 		
-			my $sth=$moDbh->prepare($sql);
-			$sth->execute($fids2externalIds->{$fid}[0]);
-			while (my $row=$sth->fetch)
+			my $domainSth=$moDbh->prepare($domainSql);
+			$domainSth->execute($fids2externalIds->{$fid}[0]);
+			while (my $row=$domainSth->fetch)
+			{
+				push @{$return->{$fid}},$row->[1];
+			}
+
+			my $cogSql='SELECT DISTINCT locusId,CONCAT("COG",cogInfoId) FROM COG WHERE
+				locusId = ?';
+		
+			my $cogSth=$moDbh->prepare($cogSql);
+			$cogSth->execute($fids2externalIds->{$fid}[0]);
+			while (my $row=$cogSth->fetch)
 			{
 				push @{$return->{$fid}},$row->[1];
 			}
 
 		}
 	}
-
-
-
 
     #END fids_to_domains
     my @_bad_returns;
@@ -333,6 +340,7 @@ sub domains_to_fids
 	{
 
 		# again, not ideal, but at least workable
+		# possible idea: use kinosearch for this?
 		foreach my $domainId (@$domain_ids)
 		{
 			my $domainSql='SELECT DISTINCT locusId FROM Locus2Domain WHERE
