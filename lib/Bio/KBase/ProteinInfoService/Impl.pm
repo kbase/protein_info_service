@@ -35,11 +35,11 @@ sub new
     #BEGIN_CONSTRUCTOR
 
 	my $kb = Bio::KBase->new();
-	my $kbIdServer = $kb->id_server();
+#	my $kbIdServer = $kb->id_server();
 	my $kbMOT = Bio::KBase::MOTranslationService::Client->new('http://localhost:7061');
 	my $moDbh=DBI->connect("DBI:mysql:genomics:pub.microbesonline.org",'guest','guest');
 
-	$self->{kbIdServer}=$kbIdServer;
+#	$self->{kbIdServer}=$kbIdServer;
 	$self->{kbMOT}=$kbMOT;
 	$self->{moDbh}=$moDbh;
 
