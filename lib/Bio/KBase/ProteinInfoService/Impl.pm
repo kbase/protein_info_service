@@ -22,7 +22,7 @@ should these methods provide other data, like coordinates of a hit?
 use Bio::KBase;
 use Bio::KBase::MOTranslationService::Client;
 use DBI;
-use ContextAdapter;
+#use ContextAdapter;
 
 #END_HEADER
 
