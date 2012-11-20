@@ -14,17 +14,17 @@ my $host_addr = "http://localhost:7057";
 # only command to test = fids_to_operons
 
 # Test 1: invoke the module
-require_ok("Bio::KBase::OperonService::Client");
+require_ok("Bio::KBase::ProteinInfoService::Client");
 
 # Test 2: create a new service
 my $service;
-$service = new_ok("Bio::KBase::OperonService::Client", [$host_addr]);
+$service = new_ok("Bio::KBase::ProteinInfoService::Client", [$host_addr]);
 
 # Test 3: did we get a valid service class?
 ok(defined $service, "Did a service object get defined?");
 
 # Test 4: is it the right class?
-isa_ok($service, "Bio::KBase::OperonService::Client", "Is it the right class?");
+isa_ok($service, "Bio::KBase::ProteinInfoService::Client", "Is it the right class?");
 
 # Test 5: can it invoke the method we want?
 ok($service->can("fids_to_operons"), "Can we invoke fids_to_operons?");
