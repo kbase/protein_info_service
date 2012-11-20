@@ -111,7 +111,7 @@ sub fids_to_operons
 							       method_name => 'fids_to_operons');
     }
 
-    my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
+#    my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
     my($return);
     #BEGIN fids_to_operons
 
@@ -119,8 +119,8 @@ sub fids_to_operons
 
 	if (scalar @$fids)
 	{
-		my $ctxA = ContextAdapter->new($ctx);
-		my $user_token = $ctxA->user_token();
+#		my $ctxA = ContextAdapter->new($ctx);
+#		my $user_token = $ctxA->user_token();
 
 #		my $kbIdServer=$self->{kbIdServer};
 		my $moDbh=$self->{moDbh};
@@ -215,7 +215,7 @@ sub fids_to_domains
 							       method_name => 'fids_to_domains');
     }
 
-    my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
+#    my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
     my($return);
     #BEGIN fids_to_domains
 
@@ -223,8 +223,8 @@ sub fids_to_domains
 
 	if (scalar @$fids)
 	{
-		my $ctxA = ContextAdapter->new($ctx);
-		my $user_token = $ctxA->user_token();
+#		my $ctxA = ContextAdapter->new($ctx);
+#		my $user_token = $ctxA->user_token();
 
 		my $moDbh=$self->{moDbh};
 		my $kbMOT=$self->{kbMOT};
@@ -327,7 +327,7 @@ sub domains_to_fids
 							       method_name => 'domains_to_fids');
     }
 
-    my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
+#    my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
     my($return);
     #BEGIN domains_to_fids
 	
@@ -454,7 +454,7 @@ sub fids_to_orthologs
 							       method_name => 'fids_to_orthologs');
     }
 
-    my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
+#    my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
     my($return);
     #BEGIN fids_to_orthologs
     #END fids_to_orthologs
@@ -524,7 +524,7 @@ sub fids_to_synonyms
 							       method_name => 'fids_to_synonyms');
     }
 
-    my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
+#    my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
     my($return);
     #BEGIN fids_to_synonyms
     #END fids_to_synonyms
@@ -594,7 +594,7 @@ sub fids_to_ec
 							       method_name => 'fids_to_ec');
     }
 
-    my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
+#    my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
     my($return);
     #BEGIN fids_to_ec
     #END fids_to_ec
@@ -664,7 +664,7 @@ sub fids_to_go
 							       method_name => 'fids_to_go');
     }
 
-    my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
+#    my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
     my($return);
     #BEGIN fids_to_go
     #END fids_to_go
@@ -734,7 +734,7 @@ sub fids_to_ipr
 							       method_name => 'fids_to_ipr');
     }
 
-    my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
+#    my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
     my($return);
     #BEGIN fids_to_ipr
     #END fids_to_ipr
