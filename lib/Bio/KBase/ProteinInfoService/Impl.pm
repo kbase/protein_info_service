@@ -353,6 +353,7 @@ sub domains_to_fids
 					cogInfoId = ?';
 		
 				my $cogSth=$moDbh->prepare($cogSql);
+
 				$cogSth->execute($cogInfoId);
 				while (my $row=$cogSth->fetch)
 				{
