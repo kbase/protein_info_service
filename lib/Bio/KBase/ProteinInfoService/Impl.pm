@@ -153,7 +153,7 @@ sub fids_to_operons
 			my $genomes=$kbCDM->fids_to_genomes([$kbId]);
 			my $genome=$genomes->{$kbId};
 
-			my $kbOperonIds=[];
+			my $kbOperonIds;
 			# craziness: try to limit operon to the original genome
 			# potentially different operons are called in
 			# different genomes
@@ -167,7 +167,7 @@ sub fids_to_operons
 				}
 			}
 
-			$operons->{$kbId}=$kbOperonIds;
+			$operons->{$kbId}=$kbOperonIds || [$kbId];
 		}
 		$return=$operons|| {};
 	}
