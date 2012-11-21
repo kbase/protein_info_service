@@ -11,9 +11,8 @@ ProteinInfo
 
 =head1 DESCRIPTION
 
-This module provides various annotations about proteins.
-
-should these methods provide other data, like coordinates of a hit?
+This module provides various annotations about proteins, including
+domain annotations, orthologs in other genomes, and operons.
 
 =cut
 
@@ -94,7 +93,10 @@ operon is a reference to a list where each element is a fid
 
 fids_to_operons takes as input a list of feature
 ids and returns a mapping of each fid to the operon
-in which it is found
+in which it is found. The list of fids in the operon
+is not necessarily in the order that the fids are found
+on the genome.  (fids_to_operons is currently not properly
+implemented.)
 
 =back
 
@@ -113,7 +115,7 @@ sub fids_to_operons
 							       method_name => 'fids_to_operons');
     }
 
-#    my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
+    my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
     my($return);
     #BEGIN fids_to_operons
 
@@ -198,9 +200,9 @@ sub fids_to_operons
 
 <pre>
 $fids is a reference to a list where each element is a fid
-$return is a reference to a hash where the key is a fid and the value is a reference to a list where each element is a domain_id
+$return is a reference to a hash where the key is a fid and the value is a domains
 fid is a string
-domain_id is a string
+domains is a reference to a list where each element is a string
 
 </pre>
 
@@ -209,9 +211,9 @@ domain_id is a string
 =begin text
 
 $fids is a reference to a list where each element is a fid
-$return is a reference to a hash where the key is a fid and the value is a reference to a list where each element is a domain_id
+$return is a reference to a hash where the key is a fid and the value is a domains
 fid is a string
-domain_id is a string
+domains is a reference to a list where each element is a string
 
 
 =end text
@@ -241,7 +243,7 @@ sub fids_to_domains
 							       method_name => 'fids_to_domains');
     }
 
-#    my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
+    my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
     my($return);
     #BEGIN fids_to_domains
 
@@ -300,9 +302,9 @@ sub fids_to_domains
 
 
 
-=head2 domains_to_fids
+=head2 fids_to_ipr
 
-  $return = $obj->domains_to_fids($domain_ids)
+  $return = $obj->fids_to_ipr($fids)
 
 =over 4
 
@@ -311,10 +313,10 @@ sub fids_to_domains
 =begin html
 
 <pre>
-$domain_ids is a reference to a list where each element is a domain_id
-$return is a reference to a hash where the key is a domain_id and the value is a reference to a list where each element is a fid
-domain_id is a string
+$fids is a reference to a list where each element is a fid
+$return is a reference to a hash where the key is a fid and the value is an ipr
 fid is a string
+ipr is a reference to a list where each element is a string
 
 </pre>
 
@@ -322,10 +324,10 @@ fid is a string
 
 =begin text
 
-$domain_ids is a reference to a list where each element is a domain_id
-$return is a reference to a hash where the key is a domain_id and the value is a reference to a list where each element is a fid
-domain_id is a string
+$fids is a reference to a list where each element is a fid
+$return is a reference to a hash where the key is a fid and the value is an ipr
 fid is a string
+ipr is a reference to a list where each element is a string
 
 
 =end text
@@ -334,92 +336,42 @@ fid is a string
 
 =item Description
 
+domains_to_fids takes as input a list of domain_ids, and
+returns a mapping of each domain_id to the fids which have that
+domain. (This includes COG, even though COG is not part of
+InterProScan.)
+funcdef domains_to_fids (domains domain_ids) returns (mapping<domain_id, list<fid>>);
 
+/*
+fids_to_ipr is currently not implemented.
 
 =back
 
 =cut
 
-sub domains_to_fids
+sub fids_to_ipr
 {
     my $self = shift;
-    my($domain_ids) = @_;
+    my($fids) = @_;
 
     my @_bad_arguments;
-    (ref($domain_ids) eq 'ARRAY') or push(@_bad_arguments, "Invalid type for argument \"domain_ids\" (value was \"$domain_ids\")");
+    (ref($fids) eq 'ARRAY') or push(@_bad_arguments, "Invalid type for argument \"fids\" (value was \"$fids\")");
     if (@_bad_arguments) {
-	my $msg = "Invalid arguments passed to domains_to_fids:\n" . join("", map { "\t$_\n" } @_bad_arguments);
+	my $msg = "Invalid arguments passed to fids_to_ipr:\n" . join("", map { "\t$_\n" } @_bad_arguments);
 	Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
-							       method_name => 'domains_to_fids');
+							       method_name => 'fids_to_ipr');
     }
 
-#    my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
+    my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
     my($return);
-    #BEGIN domains_to_fids
-	
-	$return={};
-	
-	my $moDbh=$self->{moDbh};
-	my $kbMOT=$self->{kbMOT};
-
-	if (scalar @$domain_ids)
-	{
-
-		# again, not ideal, but at least workable
-		# possible idea: use kinosearch for this?
-		foreach my $domainId (@$domain_ids)
-		{
-			my $domainSql='SELECT DISTINCT locusId FROM Locus2Domain WHERE
-				domainId = ?';
-		
-			my $domainSth=$moDbh->prepare($domainSql);
-			$domainSth->execute($domainId);
-			my @externalIds;
-			while (my $row=$domainSth->fetch)
-			{
-				push @externalIds,$row->[0];
-			}
-
-			my ($cogInfoId)=$domainId=~/^COG(\d+)$/;
-			if ($cogInfoId)
-			{
-				my $cogSql='SELECT DISTINCT locusId FROM COG WHERE
-					cogInfoId = ?';
-		
-				my $cogSth=$moDbh->prepare($cogSql);
-
-				$cogSth->execute($cogInfoId);
-				while (my $row=$cogSth->fetch)
-				{
-					push @externalIds,$row->[0];
-				}
-			}
-
-			if (scalar @externalIds)
-			{
-				my $extIds2fids=$kbMOT->moLocusIds_to_fids(\@externalIds);
-				my $domain_fids={};
-				foreach my $extId (keys %$extIds2fids)
-				{
-					# this is an arrayref
-					my $fids=$extIds2fids->{$extId};
-					map {$domain_fids->{$_} = $_} @$fids;
-				}
-
-				my @domain_fids=keys $domain_fids;
-				$return->{$domainId} = \@domain_fids;
-			}
-		}
-
-	}
-	
-    #END domains_to_fids
+    #BEGIN fids_to_ipr
+    #END fids_to_ipr
     my @_bad_returns;
     (ref($return) eq 'HASH') or push(@_bad_returns, "Invalid type for return variable \"return\" (value was \"$return\")");
     if (@_bad_returns) {
-	my $msg = "Invalid returns passed to domains_to_fids:\n" . join("", map { "\t$_\n" } @_bad_returns);
+	my $msg = "Invalid returns passed to fids_to_ipr:\n" . join("", map { "\t$_\n" } @_bad_returns);
 	Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
-							       method_name => 'domains_to_fids');
+							       method_name => 'fids_to_ipr');
     }
     return($return);
 }
@@ -461,7 +413,7 @@ orthologs is a reference to a list where each element is a fid
 
 =item Description
 
-
+fids_to_orthologs is currently not implemented.
 
 =back
 
@@ -480,7 +432,7 @@ sub fids_to_orthologs
 							       method_name => 'fids_to_orthologs');
     }
 
-#    my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
+    my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
     my($return);
     #BEGIN fids_to_orthologs
     #END fids_to_orthologs
@@ -490,76 +442,6 @@ sub fids_to_orthologs
 	my $msg = "Invalid returns passed to fids_to_orthologs:\n" . join("", map { "\t$_\n" } @_bad_returns);
 	Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
 							       method_name => 'fids_to_orthologs');
-    }
-    return($return);
-}
-
-
-
-
-=head2 fids_to_synonyms
-
-  $return = $obj->fids_to_synonyms($fids)
-
-=over 4
-
-=item Parameter and return types
-
-=begin html
-
-<pre>
-$fids is a reference to a list where each element is a fid
-$return is a reference to a hash where the key is a fid and the value is a synonyms
-fid is a string
-synonyms is a reference to a list where each element is a string
-
-</pre>
-
-=end html
-
-=begin text
-
-$fids is a reference to a list where each element is a fid
-$return is a reference to a hash where the key is a fid and the value is a synonyms
-fid is a string
-synonyms is a reference to a list where each element is a string
-
-
-=end text
-
-
-
-=item Description
-
-this might be more appropriate for the translation service
-
-=back
-
-=cut
-
-sub fids_to_synonyms
-{
-    my $self = shift;
-    my($fids) = @_;
-
-    my @_bad_arguments;
-    (ref($fids) eq 'ARRAY') or push(@_bad_arguments, "Invalid type for argument \"fids\" (value was \"$fids\")");
-    if (@_bad_arguments) {
-	my $msg = "Invalid arguments passed to fids_to_synonyms:\n" . join("", map { "\t$_\n" } @_bad_arguments);
-	Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
-							       method_name => 'fids_to_synonyms');
-    }
-
-#    my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
-    my($return);
-    #BEGIN fids_to_synonyms
-    #END fids_to_synonyms
-    my @_bad_returns;
-    (ref($return) eq 'HASH') or push(@_bad_returns, "Invalid type for return variable \"return\" (value was \"$return\")");
-    if (@_bad_returns) {
-	my $msg = "Invalid returns passed to fids_to_synonyms:\n" . join("", map { "\t$_\n" } @_bad_returns);
-	Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
-							       method_name => 'fids_to_synonyms');
     }
     return($return);
 }
@@ -601,7 +483,7 @@ ec is a reference to a list where each element is a string
 
 =item Description
 
-
+fids_to_ec is currently not implemented.
 
 =back
 
@@ -620,7 +502,7 @@ sub fids_to_ec
 							       method_name => 'fids_to_ec');
     }
 
-#    my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
+    my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
     my($return);
     #BEGIN fids_to_ec
     #END fids_to_ec
@@ -671,7 +553,7 @@ go is a reference to a list where each element is a string
 
 =item Description
 
-
+fids_to_go is currently not implemented.
 
 =back
 
@@ -690,7 +572,7 @@ sub fids_to_go
 							       method_name => 'fids_to_go');
     }
 
-#    my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
+    my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
     my($return);
     #BEGIN fids_to_go
     #END fids_to_go
@@ -700,76 +582,6 @@ sub fids_to_go
 	my $msg = "Invalid returns passed to fids_to_go:\n" . join("", map { "\t$_\n" } @_bad_returns);
 	Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
 							       method_name => 'fids_to_go');
-    }
-    return($return);
-}
-
-
-
-
-=head2 fids_to_ipr
-
-  $return = $obj->fids_to_ipr($fids)
-
-=over 4
-
-=item Parameter and return types
-
-=begin html
-
-<pre>
-$fids is a reference to a list where each element is a fid
-$return is a reference to a hash where the key is a fid and the value is an ipr
-fid is a string
-ipr is a reference to a list where each element is a string
-
-</pre>
-
-=end html
-
-=begin text
-
-$fids is a reference to a list where each element is a fid
-$return is a reference to a hash where the key is a fid and the value is an ipr
-fid is a string
-ipr is a reference to a list where each element is a string
-
-
-=end text
-
-
-
-=item Description
-
-
-
-=back
-
-=cut
-
-sub fids_to_ipr
-{
-    my $self = shift;
-    my($fids) = @_;
-
-    my @_bad_arguments;
-    (ref($fids) eq 'ARRAY') or push(@_bad_arguments, "Invalid type for argument \"fids\" (value was \"$fids\")");
-    if (@_bad_arguments) {
-	my $msg = "Invalid arguments passed to fids_to_ipr:\n" . join("", map { "\t$_\n" } @_bad_arguments);
-	Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
-							       method_name => 'fids_to_ipr');
-    }
-
-#    my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
-    my($return);
-    #BEGIN fids_to_ipr
-    #END fids_to_ipr
-    my @_bad_returns;
-    (ref($return) eq 'HASH') or push(@_bad_returns, "Invalid type for return variable \"return\" (value was \"$return\")");
-    if (@_bad_returns) {
-	my $msg = "Invalid returns passed to fids_to_ipr:\n" . join("", map { "\t$_\n" } @_bad_returns);
-	Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
-							       method_name => 'fids_to_ipr');
     }
     return($return);
 }
@@ -854,11 +666,12 @@ a string
 
 =item Description
 
-A domainId is an identifier of a protein domain or family
+A domain_id is an identifier of a protein domain or family
 (e.g., COG593, TIGR00362). Most of these are stable identifiers
-that come from external curated libraries, such as COG or InterPro,
-but some are unstable identifiers that come from automated
-analyses like FastBLAST.
+that come from external curated libraries, such as COG or InterProScan,
+but some may be unstable identifiers that come from automated
+analyses like FastBLAST. (The current implementation includes only
+COG and InterProScan's HMM libraries, such as TIGRFam and Pfam.)
 
 
 =item Definition
@@ -881,10 +694,46 @@ a string
 
 
 
+=head2 domains
+
+=over 4
+
+
+
+=item Description
+
+Domains are a list of domain_ids.
+
+
+=item Definition
+
+=begin html
+
+<pre>
+a reference to a list where each element is a string
+</pre>
+
+=end html
+
+=begin text
+
+a reference to a list where each element is a string
+
+=end text
+
+=back
+
+
+
 =head2 ec
 
 =over 4
 
+
+
+=item Description
+
+ECs are a list of Enzyme Commission identifiers.
 
 
 =item Definition
@@ -913,6 +762,11 @@ a reference to a list where each element is a string
 
 
 
+=item Description
+
+GOs are a list of Gene Ontology identifiers.
+
+
 =item Definition
 
 =begin html
@@ -937,6 +791,11 @@ a reference to a list where each element is a string
 
 =over 4
 
+
+
+=item Description
+
+IPRs are a list of InterPro identifiers.
 
 
 =item Definition
@@ -1015,32 +874,6 @@ a reference to a list where each element is a fid
 =begin text
 
 a reference to a list where each element is a fid
-
-=end text
-
-=back
-
-
-
-=head2 synonyms
-
-=over 4
-
-
-
-=item Definition
-
-=begin html
-
-<pre>
-a reference to a list where each element is a string
-</pre>
-
-=end html
-
-=begin text
-
-a reference to a list where each element is a string
 
 =end text
 
