@@ -140,16 +140,16 @@ sub fids_to_operons
 			my $operonLocusIdList=$moDbh->selectcol_arrayref($operonSql,{},$externalIds->{$kbId}[1]) || [];
 			my $moOperonIds_to_kbaseIds=$kbMOT->moLocusIds_to_fids($operonLocusIdList);
 
-			my $genomes=$kbCDM->fids_to_genomes($kbId);
+			my $genomes=$kbCDM->fids_to_genomes([$kbId]);
 			my $genome=$genomes->{$kbId};
 
 			my $kbOperonIds=[];
 			# craziness: try to limit operon to the original genome
 			foreach my $moOperonId (keys %$moOperonIds_to_kbaseIds)
 			{
-				foreach my $kbOperonId (@{$moOperonIds_to_kbaseIds->{$moOperonId}})
+				my $operonGenomes=$kbCDM->fids_to_genomes([$moOperonIds_to_kbaseIds->{$moOperonId}]);
+				foreach my $kbOperonId (keys %$operonGenomes)
 				{
-					my $operonGenomes=$kbCDM->fids_to_genomes($kbOperonId);
 					my $operonGenome=$operonGenomes->{$kbOperonId};
 					push @$kbOperonIds,$kbOperonId if ($genome eq $operonGenome);
 				}
