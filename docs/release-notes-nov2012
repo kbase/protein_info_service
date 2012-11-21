@@ -6,8 +6,8 @@ yet in KBase.)
 We currently have a draft specification file and some methods
 partially working:
 
-fids_to_operons returns a poor structure (references locusIds still, not
-	organized by genome)
+fids_to_operons sometimes returns an operon from a different version
+	of the genome instead of the exact genome
 fids_to_domains returns HMM domains or COG assignments for a fid
 	(no FastBLAST yet)
 domains_to_fids accepts HMM domains or COGs only (no FastBLAST yet)

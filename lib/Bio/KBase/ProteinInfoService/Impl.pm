@@ -137,6 +137,10 @@ sub fids_to_operons
 			my $operonSql='SELECT o2.locusId FROM Locus2Operon o1, Locus2Operon o2
 				WHERE o1.locusId=? AND o1.tuId=o2.tuId
 				GROUP BY o2.locusId';
+
+			# would like to get all of these results, then find the right
+			# locusId in this genome, then find the right operon fids
+
 			my $operonLocusIdList=$moDbh->selectcol_arrayref($operonSql,{},$externalIds->{$kbId}[1]) || [];
 			my $moOperonIds_to_kbaseIds=$kbMOT->moLocusIds_to_fids($operonLocusIdList);
 
