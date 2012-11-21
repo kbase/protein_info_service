@@ -133,15 +133,21 @@ sub fids_to_operons
 		my $operons={};
 		foreach my $kbId (keys %$externalIds)
 		{
-			#stolen from Gene.pm
-			my $operonSql='SELECT o2.locusId FROM Locus2Operon o1, Locus2Operon o2
-				WHERE o1.locusId=? AND o1.tuId=o2.tuId
-				GROUP BY o2.locusId';
+			my $placeholders='?,' x (scalar @{$externalIds->{$kbId}})
+			chop $placeholders;
+			my $operonSql='SELECT o2.locusId
+		       		FROM Locus2Operon o1, Locus2Operon o2
+				WHERE o1.locusId IN ($placeholders)
+				AND o1.tuId=o2.tuId
+				ORDER BY o2.locusId';
 
-			# would like to get all of these results, then find the right
-			# locusId in this genome, then find the right operon fids
+			# this is currently the only ProteinInfo method
+			# that needs to return genes from the same genome
+			# so doing this as a one-off is not horrible
+			# (it will be replaced by ER methods anyway once
+			# operons are a data type in KBase land)
 
-			my $operonLocusIdList=$moDbh->selectcol_arrayref($operonSql,{},$externalIds->{$kbId}[1]) || [];
+			my $operonLocusIdList=$moDbh->selectcol_arrayref($operonSql,{},@{$externalIds->{$kbId}}) || [];
 			my $moOperonIds_to_kbaseIds=$kbMOT->moLocusIds_to_fids($operonLocusIdList);
 
 			my $genomes=$kbCDM->fids_to_genomes([$kbId]);
@@ -158,7 +164,6 @@ sub fids_to_operons
 					push @$kbOperonIds,$kbOperonId if ($genome eq $operonGenome);
 				}
 			}
-
 
 			$operons->{$kbId}=$kbOperonIds;
 		}
