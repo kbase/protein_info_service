@@ -155,6 +155,8 @@ sub fids_to_operons
 
 			my $kbOperonIds=[];
 			# craziness: try to limit operon to the original genome
+			# potentially different operons are called in
+			# different genomes
 			foreach my $moOperonId (keys %$moOperonIds_to_kbaseIds)
 			{
 				my $operonGenomes=$kbCDM->fids_to_genomes($moOperonIds_to_kbaseIds->{$moOperonId});
