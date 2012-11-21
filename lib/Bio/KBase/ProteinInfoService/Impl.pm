@@ -133,13 +133,13 @@ sub fids_to_operons
 		my $operons={};
 		foreach my $kbId (keys %$externalIds)
 		{
-			my $placeholders='?,' x (scalar @{$externalIds->{$kbId}})
+			my $placeholders='?,' x (scalar @{$externalIds->{$kbId}});
 			chop $placeholders;
-			my $operonSql='SELECT o2.locusId
+			my $operonSql="SELECT o2.locusId
 		       		FROM Locus2Operon o1, Locus2Operon o2
 				WHERE o1.locusId IN ($placeholders)
 				AND o1.tuId=o2.tuId
-				ORDER BY o2.locusId';
+				ORDER BY o2.locusId";
 
 			# this is currently the only ProteinInfo method
 			# that needs to return genes from the same genome
