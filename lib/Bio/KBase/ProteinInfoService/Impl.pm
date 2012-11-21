@@ -147,7 +147,7 @@ sub fids_to_operons
 			# craziness: try to limit operon to the original genome
 			foreach my $moOperonId (keys %$moOperonIds_to_kbaseIds)
 			{
-				my $operonGenomes=$kbCDM->fids_to_genomes([$moOperonIds_to_kbaseIds->{$moOperonId}]);
+				my $operonGenomes=$kbCDM->fids_to_genomes($moOperonIds_to_kbaseIds->{$moOperonId});
 				foreach my $kbOperonId (keys %$operonGenomes)
 				{
 					my $operonGenome=$operonGenomes->{$kbOperonId};
