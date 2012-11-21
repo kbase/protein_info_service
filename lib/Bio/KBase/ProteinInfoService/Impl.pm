@@ -133,11 +133,6 @@ sub fids_to_operons
 		my $operons={};
 		foreach my $kbId (@$fids)
 		{
-			unless ($externalIds->{$kbId})
-			{
-				$operons->{$kbId}=[$kbId];
-				next;
-			}
 			my $placeholders='?,' x (scalar @{$externalIds->{$kbId}});
 			chop $placeholders;
 			my $operonSql="SELECT o2.locusId
