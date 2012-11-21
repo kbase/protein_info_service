@@ -36,10 +36,12 @@ sub new
 
 	my $kb = Bio::KBase->new();
 #	my $kbIdServer = $kb->id_server();
+	my $kbCDM = $kb->central_store;
 	my $kbMOT = Bio::KBase::MOTranslationService::Client->new('http://localhost:7061');
 	my $moDbh=DBI->connect("DBI:mysql:genomics:pub.microbesonline.org",'guest','guest');
 
 #	$self->{kbIdServer}=$kbIdServer;
+	$self->{kbCDM}=$kbCDM;
 	$self->{kbMOT}=$kbMOT;
 	$self->{moDbh}=$moDbh;
 
@@ -122,11 +124,10 @@ sub fids_to_operons
 #		my $ctxA = ContextAdapter->new($ctx);
 #		my $user_token = $ctxA->user_token();
 
-#		my $kbIdServer=$self->{kbIdServer};
 		my $moDbh=$self->{moDbh};
+		my $kbCDM=$self->{kbCDM};
 		my $kbMOT=$self->{kbMOT};
 
-#		my $externalIds=$kbIdServer->kbase_ids_to_external_ids($fids);
 		my $externalIds=$kbMOT->fids_to_moLocusIds($fids);
 
 		my $operons={};
@@ -134,13 +135,28 @@ sub fids_to_operons
 		{
 			#stolen from Gene.pm
 			my $operonSql='SELECT o2.locusId FROM Locus2Operon o1, Locus2Operon o2
-                                                    WHERE o1.locusId=? AND o1.tuId=o2.tuId
-                                                    GROUP BY o2.locusId';
-			# be lazy: just look at the first MOL returned
-			# [0] is the external db; should check if it's MOL:Feature
+				WHERE o1.locusId=? AND o1.tuId=o2.tuId
+				GROUP BY o2.locusId';
 			my $operonLocusIdList=$moDbh->selectcol_arrayref($operonSql,{},$externalIds->{$kbId}[1]) || [];
-			my @kbaseIds=$kbMOT->moLocusIds_to_fids($operonLocusIdList);
-			$operons->{$kbId}=\@kbaseIds;
+			my $moOperonIds_to_kbaseIds=$kbMOT->moLocusIds_to_fids($operonLocusIdList);
+
+			my $genomes=$kbCDM->fids_to_genomes($kbId);
+			my $genome=$genomes->{$kbId};
+
+			my $kbOperonIds=[];
+			# craziness: try to limit operon to the original genome
+			foreach my $moOperonId (keys %$moOperonIds_to_kbaseIds)
+			{
+				foreach my $kbOperonId (@{$moOperonIds_to_kbaseIds->{$moOperonId}})
+				{
+					my $operonGenomes=$kbCDM->fids_to_genomes($kbOperonId);
+					my $operonGenome=$operonGenomes->{$kbOperonId};
+					push @$kbOperonIds,$kbOperonId if ($genome eq $operonGenome);
+				}
+			}
+
+
+			$operons->{$kbId}=$kbOperonIds;
 		}
 		$return=$operons|| {};
 	}

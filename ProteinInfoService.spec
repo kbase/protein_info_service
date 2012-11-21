@@ -54,7 +54,9 @@ module ProteinInfo {
 	/*
 	fids_to_operons takes as input a list of feature
 	ids and returns a mapping of each fid to the operon
-	in which it is found. (It is currently not properly
+	in which it is found. The list of fids in the operon
+	is not necessarily in the order that the fids are found
+	on the genome.  (fids_to_operons is currently not properly
 	implemented.)
 	*/
 	funcdef fids_to_operons (list<fid> fids) returns (mapping<fid, operon>);
