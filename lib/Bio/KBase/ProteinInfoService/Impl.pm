@@ -131,8 +131,13 @@ sub fids_to_operons
 		my $externalIds=$kbMOT->fids_to_moLocusIds($fids);
 
 		my $operons={};
-		foreach my $kbId (keys %$externalIds)
+		foreach my $kbId (@$fids)
 		{
+			unless ($externalIds->{$kbId})
+			{
+				$operons->{$kbId}=[$kbId];
+				next;
+			}
 			my $placeholders='?,' x (scalar @{$externalIds->{$kbId}});
 			chop $placeholders;
 			my $operonSql="SELECT o2.locusId
