@@ -131,7 +131,7 @@ sub fids_to_operons
 		my $externalIds=$kbMOT->fids_to_moLocusIds($fids);
 
 		my $operons={};
-		foreach my $kbId (@$fids)
+		foreach my $kbId (keys %$externalIds)
 		{
 			my $placeholders='?,' x (scalar @{$externalIds->{$kbId}});
 			chop $placeholders;
