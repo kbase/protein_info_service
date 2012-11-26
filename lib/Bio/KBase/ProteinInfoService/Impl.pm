@@ -487,6 +487,7 @@ sub fids_to_orthologs
 
 		foreach my $moOrthLocusId (keys %$moOrthologs2fids)
 		{
+			next unless ref $moOrthologs2fids->{$moOrthLocusId};
 			push @{$return->{$fid}},@{$moOrthologs2fids->{$moOrthLocusId}};
 		}
 	}
