@@ -537,6 +537,37 @@ sub fids_to_ec
     my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
     my($return);
     #BEGIN fids_to_ec
+
+	$return={};
+
+	if (scalar @$fids)
+	{
+#		my $ctxA = ContextAdapter->new($ctx);
+#		my $user_token = $ctxA->user_token();
+
+		my $moDbh=$self->{moDbh};
+		my $kbMOT=$self->{kbMOT};
+
+		my $fids2externalIds=$kbMOT->fids_to_moLocusIds($fids);
+
+		# this is not the best way, but should work
+		foreach my $fid (keys %$fids2externalIds)
+		{
+			my $ecSql='SELECT DISTINCT locusId,ecNum FROM Locus2Ec WHERE
+				locusId = ?';
+#			my $placeholders='?,' x (@{$fids2externalIds->{$fid}});
+#			chop $placeholders;
+#			$sql.=$placeholders.')';
+		
+			my $ecSth=$moDbh->prepare($ecSql);
+			$ecSth->execute($fids2externalIds->{$fid}[0]);
+			while (my $row=$ecSth->fetch)
+			{
+				push @{$return->{$fid}},$row->[1];
+			}
+
+		}
+	}
     #END fids_to_ec
     my @_bad_returns;
     (ref($return) eq 'HASH') or push(@_bad_returns, "Invalid type for return variable \"return\" (value was \"$return\")");
