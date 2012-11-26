@@ -483,11 +483,11 @@ sub fids_to_orthologs
 		my $response=$ua->post("http://www.microbesonline.org/cgi-bin/getOrthologs",Content=>{locusId=>$fids2externalIds->{$fid}[0]});
 		my $json=from_json($response->content);
 		my $moOrthologs=$json->{$fids2externalIds->{$fid}[0]};
-		my $fidOrthologs=$kbMOT->moLocusIds_to_fids($moOrthologs);
+		my $moOrthologs2fids=$kbMOT->moLocusIds_to_fids($moOrthologs);
 
-		foreach my $moOrthLocusId (keys %{$fidOrthologs->{$fid}})
+		foreach my $moOrthLocusId (keys %$moOrthologs2fids)
 		{
-			push @{$return->{$fid}},@{$fidOrthologs->{$fid}{$moOrthLocusId}};
+			push @{$return->{$fid}},@{$moOrthologs2fids->{$moOrthLocusId}};
 		}
 	}
 
