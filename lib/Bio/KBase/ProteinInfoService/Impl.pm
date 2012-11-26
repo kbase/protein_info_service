@@ -21,6 +21,9 @@ domain annotations, orthologs in other genomes, and operons.
 use Bio::KBase;
 use Bio::KBase::MOTranslationService::Client;
 use DBI;
+use LWP::UserAgent;
+use JSON;
+
 #use ContextAdapter;
 
 #END_HEADER
@@ -469,6 +472,23 @@ sub fids_to_orthologs
     #BEGIN fids_to_orthologs
 
 	$return={};
+	my $ua = LWP::UserAgent->new;
+	my $kbMOT=$self->{kbMOT};
+
+	my $fids2externalIds=$kbMOT->fids_to_moLocusIds($fids);
+
+	# this is not the best way, but should work
+	foreach my $fid (keys %$fids2externalIds)
+	{
+		my $response=$ua->post("http://www.microbesonline.org/cgi-bin/getOrthologs",Content=>{locusId=>$fids2externalIds->{$fid}[0]});
+		my $json=from_json($response->content);
+		my $moOrthologs=$json->{$fids2externalIds->{$fid}[0]};
+		my $fidOrthologs=$kbMOT->moLocusIds_to_fids($moOrthologs);
+
+		$return->{$fid} = $fidOrthologs;
+#				push @{$return->{$fid}},$row->[1];
+	}
+
     #END fids_to_orthologs
     my @_bad_returns;
     (ref($return) eq 'HASH') or push(@_bad_returns, "Invalid type for return variable \"return\" (value was \"$return\")");
