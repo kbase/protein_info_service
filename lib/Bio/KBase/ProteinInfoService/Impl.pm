@@ -467,6 +467,8 @@ sub fids_to_orthologs
     my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
     my($return);
     #BEGIN fids_to_orthologs
+
+	$return={};
     #END fids_to_orthologs
     my @_bad_returns;
     (ref($return) eq 'HASH') or push(@_bad_returns, "Invalid type for return variable \"return\" (value was \"$return\")");
