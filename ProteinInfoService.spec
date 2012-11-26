@@ -84,7 +84,9 @@ module ProteinInfo {
 	funcdef fids_to_ipr (list<fid> fids) returns (mapping<fid,ipr>);
 
 	/*
-	fids_to_orthologs is currently not implemented.
+	fids_to_orthologs takes as input a list of feature ids, and
+	returns a mapping of each fid to its orthologous fids in
+	all genomes.
 	*/
 	funcdef fids_to_orthologs (list<fid> fids) returns (mapping<fid, orthologs>);
 
