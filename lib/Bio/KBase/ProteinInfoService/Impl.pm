@@ -485,8 +485,10 @@ sub fids_to_orthologs
 		my $moOrthologs=$json->{$fids2externalIds->{$fid}[0]};
 		my $fidOrthologs=$kbMOT->moLocusIds_to_fids($moOrthologs);
 
-		$return->{$fid} = $fidOrthologs;
-#				push @{$return->{$fid}},$row->[1];
+		foreach my $moOrthLocusId (keys %{$fidOrthologs->{$fid}})
+		{
+			push @{$return->{$fid}},@{$fidOrthologs->{$fid}{$moOrthLocusId}};
+		}
 	}
 
     #END fids_to_orthologs
