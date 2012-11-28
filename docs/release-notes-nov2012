@@ -7,6 +7,9 @@ We currently have a draft specification file and a working
 implementation of all methods.  There are still some known
 bugs and missing features.
 
+The database connection sometimes disappears, and methods do not
+return a reasonable error to this effect.
+
 fids_to_operons may return an operon from a different version
 	of the genome instead of the exact genome
 fids_to_operons also currently returns multiple copies of the
