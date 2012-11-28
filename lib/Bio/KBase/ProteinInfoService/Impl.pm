@@ -40,7 +40,7 @@ sub new
 #	my $kbIdServer = $kb->id_server();
 	my $kbCDM = $kb->central_store;
 	my $kbMOT = Bio::KBase::MOTranslationService::Client->new('http://localhost:7061');
-	my $moDbh=DBI->connect("DBI:mysql:genomics:pub.microbesonline.org",'guest','guest');
+	my $moDbh=DBI->connect("DBI:mysql:genomics:pub.microbesonline.org",'genomics');
 
 #	$self->{kbIdServer}=$kbIdServer;
 	$self->{kbCDM}=$kbCDM;
