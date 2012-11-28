@@ -306,6 +306,81 @@ sub fids_to_domains
 
 
 
+=head2 domains_to_fids
+
+  $return = $obj->domains_to_fids($domain_ids)
+
+=over 4
+
+=item Parameter and return types
+
+=begin html
+
+<pre>
+$domain_ids is a domains
+$return is a reference to a hash where the key is a domain_id and the value is a reference to a list where each element is a fid
+domains is a reference to a list where each element is a string
+domain_id is a string
+fid is a string
+
+</pre>
+
+=end html
+
+=begin text
+
+$domain_ids is a domains
+$return is a reference to a hash where the key is a domain_id and the value is a reference to a list where each element is a fid
+domains is a reference to a list where each element is a string
+domain_id is a string
+fid is a string
+
+
+=end text
+
+
+
+=item Description
+
+domains_to_fids takes as input a list of domain_ids, and
+returns a mapping of each domain_id to the fids which have that
+domain. (This includes COG, even though COG is not part of
+InterProScan.)
+
+=back
+
+=cut
+
+sub domains_to_fids
+{
+    my $self = shift;
+    my($domain_ids) = @_;
+
+    my @_bad_arguments;
+    (ref($domain_ids) eq 'ARRAY') or push(@_bad_arguments, "Invalid type for argument \"domain_ids\" (value was \"$domain_ids\")");
+    if (@_bad_arguments) {
+	my $msg = "Invalid arguments passed to domains_to_fids:\n" . join("", map { "\t$_\n" } @_bad_arguments);
+	Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
+							       method_name => 'domains_to_fids');
+    }
+
+    my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
+    my($return);
+    #BEGIN domains_to_fids
+    #END domains_to_fids
+    my @_bad_returns;
+    (ref($return) eq 'HASH') or push(@_bad_returns, "Invalid type for return variable \"return\" (value was \"$return\")");
+    if (@_bad_returns) {
+	my $msg = "Invalid returns passed to domains_to_fids:\n" . join("", map { "\t$_\n" } @_bad_returns);
+	Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
+							       method_name => 'domains_to_fids');
+    }
+    return($return);
+}
+
+
+
+
 =head2 fids_to_ipr
 
   $return = $obj->fids_to_ipr($fids)
@@ -340,14 +415,9 @@ ipr is a reference to a list where each element is a string
 
 =item Description
 
-domains_to_fids takes as input a list of domain_ids, and
-returns a mapping of each domain_id to the fids which have that
-domain. (This includes COG, even though COG is not part of
-InterProScan.)
-funcdef domains_to_fids (domains domain_ids) returns (mapping<domain_id, list<fid>>);
-
-/*
-fids_to_ipr is currently not implemented.
+fids_to_ipr takes as input a list of feature ids, and returns
+a mapping of each fid to its IPR assignments. These can come from
+HMMER or from non-HMM-based InterProScan results.
 
 =back
 
@@ -449,7 +519,9 @@ orthologs is a reference to a list where each element is a fid
 
 =item Description
 
-fids_to_orthologs is currently not implemented.
+fids_to_orthologs takes as input a list of feature ids, and
+returns a mapping of each fid to its orthologous fids in
+all genomes.
 
 =back
 
@@ -541,7 +613,8 @@ ec is a reference to a list where each element is a string
 
 =item Description
 
-fids_to_ec is currently not implemented.
+fids_to_ec takes as input a list of feature ids, and returns
+a mapping of each fid to its Enzyme Commission numbers (EC).
 
 =back
 
@@ -642,7 +715,8 @@ go is a reference to a list where each element is a string
 
 =item Description
 
-fids_to_go is currently not implemented.
+fids_to_go takes as input a list of feature ids, and returns
+a mapping of each fid to its Gene Ontology assignments (GO).
 
 =back
 
@@ -792,7 +866,7 @@ A domain_id is an identifier of a protein domain or family
 that come from external curated libraries, such as COG or InterProScan,
 but some may be unstable identifiers that come from automated
 analyses like FastBLAST. (The current implementation includes only
-COG and InterProScan's HMM libraries, such as TIGRFam and Pfam.)
+COG and InterProScan HMM libraries, such as TIGRFam and Pfam.)
 
 
 =item Definition
