@@ -367,6 +367,63 @@ sub domains_to_fids
     my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
     my($return);
     #BEGIN domains_to_fids
+
+	$return={};
+	
+	my $moDbh=$self->{moDbh};
+	my $kbMOT=$self->{kbMOT};
+
+	if (scalar @$domain_ids)
+	{
+
+		# again, not ideal, but at least workable
+		# possible idea: use kinosearch for this?
+		foreach my $domainId (@$domain_ids)
+		{
+			my $domainSql='SELECT DISTINCT locusId FROM Locus2Domain WHERE
+				domainId = ?';
+		
+			my $domainSth=$moDbh->prepare($domainSql);
+			$domainSth->execute($domainId);
+			my @externalIds;
+			while (my $row=$domainSth->fetch)
+			{
+				push @externalIds,$row->[0];
+			}
+
+			my ($cogInfoId)=$domainId=~/^COG(\d+)$/;
+			if ($cogInfoId)
+			{
+				my $cogSql='SELECT DISTINCT locusId FROM COG WHERE
+					cogInfoId = ?';
+		
+				my $cogSth=$moDbh->prepare($cogSql);
+
+				$cogSth->execute($cogInfoId);
+				while (my $row=$cogSth->fetch)
+				{
+					push @externalIds,$row->[0];
+				}
+			}
+
+			if (scalar @externalIds)
+			{
+				my $extIds2fids=$kbMOT->moLocusIds_to_fids(\@externalIds);
+				my $domain_fids={};
+				foreach my $extId (keys %$extIds2fids)
+				{
+					# this is an arrayref
+					my $fids=$extIds2fids->{$extId};
+					map {$domain_fids->{$_} = $_} @$fids;
+				}
+
+				my @domain_fids=keys $domain_fids;
+				$return->{$domainId} = \@domain_fids;
+			}
+		}
+
+	}
+	
     #END domains_to_fids
     my @_bad_returns;
     (ref($return) eq 'HASH') or push(@_bad_returns, "Invalid type for return variable \"return\" (value was \"$return\")");
