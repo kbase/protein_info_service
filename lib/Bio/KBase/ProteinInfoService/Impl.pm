@@ -168,11 +168,11 @@ sub fids_to_operons
 				foreach my $kbOperonId (keys %$operonGenomes)
 				{
 					my $operonGenome=$operonGenomes->{$kbOperonId};
-					push @$kbOperonIds,$kbOperonId if ($genome eq $operonGenome);
+					$kbOperonIds->{$kbOperonId}=1 if ($genome eq $operonGenome);
 				}
 			}
 
-			$operons->{$kbId}=$kbOperonIds || [$kbId];
+			$operons->{$kbId}=(keys %$kbOperonIds) || [$kbId];
 		}
 		$return=$operons|| {};
 	}
