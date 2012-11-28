@@ -172,7 +172,8 @@ sub fids_to_operons
 				}
 			}
 
-			$operons->{$kbId}=(keys %$kbOperonIds) || [$kbId];
+			my @kbOperonIds=keys %$kbOperonIds;
+			$operons->{$kbId}=\@kbOperonIds || [$kbId];
 		}
 		$return=$operons|| {};
 	}
