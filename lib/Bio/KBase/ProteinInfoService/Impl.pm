@@ -21,6 +21,9 @@ domain annotations, orthologs in other genomes, and operons.
 use Bio::KBase;
 use Bio::KBase::MOTranslationService::Client;
 use DBI;
+use LWP::UserAgent;
+use JSON;
+
 #use ContextAdapter;
 
 #END_HEADER
@@ -37,7 +40,7 @@ sub new
 #	my $kbIdServer = $kb->id_server();
 	my $kbCDM = $kb->central_store;
 	my $kbMOT = Bio::KBase::MOTranslationService::Client->new('http://localhost:7061');
-	my $moDbh=DBI->connect("DBI:mysql:genomics:pub.microbesonline.org",'guest','guest');
+	my $moDbh=DBI->connect("DBI:mysql:genomics:db1.chicago.kbase.us",'genomics');
 
 #	$self->{kbIdServer}=$kbIdServer;
 	$self->{kbCDM}=$kbCDM;
@@ -365,6 +368,38 @@ sub fids_to_ipr
     my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
     my($return);
     #BEGIN fids_to_ipr
+
+	$return={};
+
+	if (scalar @$fids)
+	{
+#		my $ctxA = ContextAdapter->new($ctx);
+#		my $user_token = $ctxA->user_token();
+
+		my $moDbh=$self->{moDbh};
+		my $kbMOT=$self->{kbMOT};
+
+		my $fids2externalIds=$kbMOT->fids_to_moLocusIds($fids);
+
+		# this is not the best way, but should work
+		foreach my $fid (keys %$fids2externalIds)
+		{
+			my $iprSql='SELECT DISTINCT locusId,iprId FROM Locus2Ipr WHERE
+				locusId = ?';
+#			my $placeholders='?,' x (@{$fids2externalIds->{$fid}});
+#			chop $placeholders;
+#			$sql.=$placeholders.')';
+		
+			my $iprSth=$moDbh->prepare($iprSql);
+			$iprSth->execute($fids2externalIds->{$fid}[0]);
+			while (my $row=$iprSth->fetch)
+			{
+				push @{$return->{$fid}},$row->[1];
+			}
+
+		}
+	}
+
     #END fids_to_ipr
     my @_bad_returns;
     (ref($return) eq 'HASH') or push(@_bad_returns, "Invalid type for return variable \"return\" (value was \"$return\")");
@@ -435,6 +470,28 @@ sub fids_to_orthologs
     my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
     my($return);
     #BEGIN fids_to_orthologs
+
+	$return={};
+	my $ua = LWP::UserAgent->new;
+	my $kbMOT=$self->{kbMOT};
+
+	my $fids2externalIds=$kbMOT->fids_to_moLocusIds($fids);
+
+	# this is not the best way, but should work
+	foreach my $fid (keys %$fids2externalIds)
+	{
+		my $response=$ua->post("http://www.microbesonline.org/cgi-bin/getOrthologs",Content=>{locusId=>$fids2externalIds->{$fid}[0]});
+		my $json=from_json($response->content);
+		my $moOrthologs=$json->{$fids2externalIds->{$fid}[0]};
+		my $moOrthologs2fids=$kbMOT->moLocusIds_to_fids($moOrthologs);
+
+		foreach my $moOrthLocusId (keys %$moOrthologs2fids)
+		{
+			next unless ref $moOrthologs2fids->{$moOrthLocusId};
+			push @{$return->{$fid}},@{$moOrthologs2fids->{$moOrthLocusId}};
+		}
+	}
+
     #END fids_to_orthologs
     my @_bad_returns;
     (ref($return) eq 'HASH') or push(@_bad_returns, "Invalid type for return variable \"return\" (value was \"$return\")");
@@ -505,6 +562,37 @@ sub fids_to_ec
     my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
     my($return);
     #BEGIN fids_to_ec
+
+	$return={};
+
+	if (scalar @$fids)
+	{
+#		my $ctxA = ContextAdapter->new($ctx);
+#		my $user_token = $ctxA->user_token();
+
+		my $moDbh=$self->{moDbh};
+		my $kbMOT=$self->{kbMOT};
+
+		my $fids2externalIds=$kbMOT->fids_to_moLocusIds($fids);
+
+		# this is not the best way, but should work
+		foreach my $fid (keys %$fids2externalIds)
+		{
+			my $ecSql='SELECT DISTINCT locusId,ecNum FROM Locus2Ec WHERE
+				locusId = ?';
+#			my $placeholders='?,' x (@{$fids2externalIds->{$fid}});
+#			chop $placeholders;
+#			$sql.=$placeholders.')';
+		
+			my $ecSth=$moDbh->prepare($ecSql);
+			$ecSth->execute($fids2externalIds->{$fid}[0]);
+			while (my $row=$ecSth->fetch)
+			{
+				push @{$return->{$fid}},$row->[1];
+			}
+
+		}
+	}
     #END fids_to_ec
     my @_bad_returns;
     (ref($return) eq 'HASH') or push(@_bad_returns, "Invalid type for return variable \"return\" (value was \"$return\")");
@@ -575,6 +663,38 @@ sub fids_to_go
     my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
     my($return);
     #BEGIN fids_to_go
+
+	$return={};
+
+	if (scalar @$fids)
+	{
+#		my $ctxA = ContextAdapter->new($ctx);
+#		my $user_token = $ctxA->user_token();
+
+		my $moDbh=$self->{moDbh};
+		my $kbMOT=$self->{kbMOT};
+
+		my $fids2externalIds=$kbMOT->fids_to_moLocusIds($fids);
+
+		# this is not the best way, but should work
+		foreach my $fid (keys %$fids2externalIds)
+		{
+			my $goSql='SELECT DISTINCT locusId,acc FROM Locus2Go l2g
+		       		JOIN term t ON (t.id=l2g.goId)
+				WHERE locusId = ?';
+#			my $placeholders='?,' x (@{$fids2externalIds->{$fid}});
+#			chop $placeholders;
+#			$sql.=$placeholders.')';
+		
+			my $goSth=$moDbh->prepare($goSql);
+			$goSth->execute($fids2externalIds->{$fid}[0]);
+			while (my $row=$goSth->fetch)
+			{
+				push @{$return->{$fid}},$row->[1];
+			}
+
+		}
+	}
     #END fids_to_go
     my @_bad_returns;
     (ref($return) eq 'HASH') or push(@_bad_returns, "Invalid type for return variable \"return\" (value was \"$return\")");
