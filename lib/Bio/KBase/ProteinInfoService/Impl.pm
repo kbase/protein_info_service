@@ -47,7 +47,7 @@ sub new
 	my $dbName='genomics';
 	my $user='genomics';
 	my $pass=undef;
-	my $port=5432;
+	my $port=3306;
 	my $dbhost='db1.chicago.kbase.us';
 	my $sock='';
 	my $moDbh = DBKernel->new($dbms, $dbName, $user, $pass, $port, $dbhost, $sock);
