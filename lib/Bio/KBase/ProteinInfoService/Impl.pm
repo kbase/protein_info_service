@@ -616,11 +616,15 @@ sub fids_to_orthologs
 		my $moOrthologs=$json->{$fids2externalIds->{$fid}[0]};
 		my $moOrthologs2fids=$kbMOT->moLocusIds_to_fids($moOrthologs);
 
+		my %kbOrthologs;
 		foreach my $moOrthLocusId (keys %$moOrthologs2fids)
 		{
 			next unless ref $moOrthologs2fids->{$moOrthLocusId};
-			push @{$return->{$fid}},@{$moOrthologs2fids->{$moOrthLocusId}};
+			$kbOrthologs{$moOrthologs2fids->{$moOrthLocusId}=1;
+#			push @{$return->{$fid}},@{$moOrthologs2fids->{$moOrthLocusId}};
 		}
+		my @kbOrthologs=keys %kbOrthologs;
+		$return->{$fid} = \@kbOrthologs;
 	}
 
     #END fids_to_orthologs
