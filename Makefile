@@ -85,7 +85,7 @@ deploy: deploy-client
 deploy-all: deploy-client deploy-service
 	@echo "OK... Done deploying ALL artifacts (includes clients, scripts and server) of $(SERVICE)."
 
-deploy-client: deploy-libs deploy-scripts deploy-docs
+deploy-client: compile-typespec deploy-libs deploy-scripts build-docs deploy-docs
 
 deploy-libs:
 	mkdir -p $(TARGET)/lib/Bio/KBase/$(SERVICE_NAME)
@@ -99,13 +99,13 @@ deploy-libs:
 deploy-scripts:
 	@echo "scripts are not yet ready to be deployed."
 
-deploy-docs:
+deploy-docs: build-docs
 	mkdir -p $(SERVICE_DIR)/webroot
 	cp docs/*.html $(SERVICE_DIR)/webroot/.
 
 
 # deploys all libraries and scripts needed to start the server
-deploy-service: deploy-server-libs deploy-server-scripts
+deploy-service: compile-typespec deploy-server-libs deploy-server-scripts
 
 deploy-server-libs:
 	mkdir -p $(TARGET)/lib/Bio/KBase/$(SERVICE_NAME)
