@@ -18,11 +18,12 @@ domain annotations, orthologs in other genomes, and operons.
 
 #BEGIN_HEADER
 
-use Bio::KBase;
-use Bio::KBase::MOTranslationService::Client;
-use DBI;
 use LWP::UserAgent;
 use JSON;
+
+use Bio::KBase;
+use Bio::KBase::MOTranslationService::Client;
+use DBKernel;
 
 #use ContextAdapter;
 
@@ -40,7 +41,15 @@ sub new
 #	my $kbIdServer = $kb->id_server();
 	my $kbCDM = $kb->central_store;
 	my $kbMOT = Bio::KBase::MOTranslationService::Client->new('http://localhost:7061');
-	my $moDbh=DBI->connect("DBI:mysql:genomics:db1.chicago.kbase.us",'genomics');
+#	my $moDbh=DBI->connect("DBI:mysql:genomics:db1.chicago.kbase.us",'genomics');
+
+	my $dbms='mysql';
+	my $dbName='genomics';
+	my $user='genomics';
+	my $pass=undef;
+	my $port=5432;
+	my $dbhost='db1.chicago.kbase.us';
+	my $moDbh = DBKernel->new($dbms, $dbName, $user, $pass, $port, $dbhost, $sock);
 
 #	$self->{kbIdServer}=$kbIdServer;
 	$self->{kbCDM}=$kbCDM;
