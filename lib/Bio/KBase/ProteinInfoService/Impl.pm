@@ -49,6 +49,7 @@ sub new
 	my $pass=undef;
 	my $port=5432;
 	my $dbhost='db1.chicago.kbase.us';
+	my $sock='';
 	my $moDbh = DBKernel->new($dbms, $dbName, $user, $pass, $port, $dbhost, $sock);
 
 #	$self->{kbIdServer}=$kbIdServer;
