@@ -709,6 +709,7 @@ sub fids_to_ec
 		# this is not the best way, but should work
 		foreach my $fid (keys %$fids2externalIds)
 		{
+			$return->{$fid} = [];
 			my $ecSql='SELECT DISTINCT locusId,ecNum FROM Locus2Ec WHERE
 				locusId = ?';
 #			my $placeholders='?,' x (@{$fids2externalIds->{$fid}});
