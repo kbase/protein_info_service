@@ -380,6 +380,7 @@ sub domains_to_fids
 		# possible idea: use kinosearch for this?
 		foreach my $domainId (@$domain_ids)
 		{
+			$return->{$domainId}=[];
 			my $domainSql='SELECT DISTINCT locusId FROM Locus2Domain WHERE
 				domainId = ?';
 		
