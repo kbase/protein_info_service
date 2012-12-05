@@ -15,12 +15,11 @@ use warnings;
 use Test::More;
 use Test::Deep;
 use Data::Dumper;
-use lib "../lib";
+use lib "lib";
+use lib "t/server-tests";
+use ProteinTestConfig qw(getHost getPort);
 
-use FindBin;
-use lib "$FindBin::Bin/..";
-
-my $host_addr = "http://localhost:7057";
+#my $host_addr = "http://localhost:7057";
 
 my $num_tests = 0;
 
@@ -32,8 +31,13 @@ use_ok("JSON::RPC::Client");
 $num_tests += 2;
 
 ##########
+# MAKE A CONNECTION (DETERMINE THE URL TO USE BASED ON THE CONFIG MODULE)
 # Make sure we can instantiate a client
-my $client = new_ok("Bio::KBase::ProteinInfoService::Client", [$host_addr]);
+my $host=getHost(); my $port=getPort();
+print "-> attempting to connect to:'".$host.":".$port."'\n";
+my $client = Bio::KBase::ProteinInfoService::Client->new($host.":".$port);
+
+#my $client = new_ok("Bio::KBase::ProteinInfoService::Client",[$host.":".$port] );
 $num_tests++;
 
 ##########
