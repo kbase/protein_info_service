@@ -16,28 +16,29 @@ use Test::More;
 use Test::Deep;
 use Data::Dumper;
 use lib "lib";
-use lib "t/server-tests";
-use ProteinTestConfig qw(getHost getPort);
+use lib "t/client-tests";
 
 #my $host_addr = "http://localhost:7057";
 
 my $num_tests = 0;
 
-##########
-# Make sure we locally load up the client library and JSON RPC
+
 use_ok("Bio::KBase::ProteinInfoService::Client");
 use_ok("JSON::RPC::Client");
 
 $num_tests += 2;
 
 ##########
-# MAKE A CONNECTION (DETERMINE THE URL TO USE BASED ON THE CONFIG MODULE)
 # Make sure we can instantiate a client
-my $host=getHost(); my $port=getPort();
-print "-> attempting to connect to:'".$host.":".$port."'\n";
-my $client = Bio::KBase::ProteinInfoService::Client->new($host.":".$port);
+##########
+# Make sure we locally load up the client library and JSON RPC
+#NEW VERSION WITH AUTO START / STOP SERVICE
+use Server;
+my ($pid, $url) = Server::start('ProteinInfoService');
+print "-> attempting to connect to:'".$url."' with PID=$pid\n";
+#my $client = new_ok("Bio::KBase::ProteinInfoService::Client", [$host_addr]);
+my $client = Bio::KBase::ProteinInfoService::Client->new($url);
 
-#my $client = new_ok("Bio::KBase::ProteinInfoService::Client",[$host.":".$port] );
 $num_tests++;
 
 ##########
@@ -93,7 +94,7 @@ my $method_calls = {
 
 foreach my $call (keys %{ $method_calls }) {
 	my $result;
-	print "\nTesting function \"$call\"\n";
+	print "Testing function \"$call\"\n";
 	{
 		no strict "refs";
 		eval { $result = $client->$call($method_calls->{$call}->{happy}); };
@@ -149,6 +150,7 @@ foreach my $call (keys %{ $method_calls }) {
 	## 6. Test with bad (but correctly formatted) data.
 	{
 		no strict "refs";
+note("test $num_tests and method $method_calls\n");
 		eval { $result = $client->$call($method_calls->{$call}->{bad}); }
 	}
 	if ($@) { print "ERROR = $@\n"; }
@@ -156,5 +158,6 @@ foreach my $call (keys %{ $method_calls }) {
 	$num_tests++;
 }
 
+Server::stop($pid);
 done_testing($num_tests);
 
