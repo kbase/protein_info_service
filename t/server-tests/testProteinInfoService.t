@@ -7,6 +7,7 @@
 # wjriehl@lbl.gov
 # November 28, 2012
 # November Build Meeting @ Argonne
+# updated 12/6/2012 landml
 ###############################################################################
 
 use strict;
@@ -18,8 +19,6 @@ use Data::Dumper;
 use lib "lib";
 use lib "t/server-tests";
 use ProteinTestConfig qw(getHost getPort);
-
-#my $host_addr = "http://localhost:7057";
 
 my $num_tests = 0;
 
@@ -35,9 +34,7 @@ $num_tests += 2;
 # Make sure we can instantiate a client
 my $host=getHost(); my $port=getPort();
 print "-> attempting to connect to:'".$host.":".$port."'\n";
-my $client = Bio::KBase::ProteinInfoService::Client->new($host.":".$port);
-
-#my $client = new_ok("Bio::KBase::ProteinInfoService::Client",[$host.":".$port] );
+my $client = new_ok("Bio::KBase::ProteinInfoService::Client",[$host.":".$port] );
 $num_tests++;
 
 ##########

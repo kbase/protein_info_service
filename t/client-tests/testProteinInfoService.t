@@ -7,6 +7,7 @@
 # wjriehl@lbl.gov
 # November 28, 2012
 # November Build Meeting @ Argonne
+# updated 12/6/2012 landml
 ###############################################################################
 
 use strict;
@@ -18,27 +19,21 @@ use Data::Dumper;
 use lib "lib";
 use lib "t/client-tests";
 
-#my $host_addr = "http://localhost:7057";
-
 my $num_tests = 0;
 
-
+##########
+# Make sure we locally load up the client library and JSON RPC
 use_ok("Bio::KBase::ProteinInfoService::Client");
 use_ok("JSON::RPC::Client");
-
 $num_tests += 2;
 
 ##########
 # Make sure we can instantiate a client
-##########
-# Make sure we locally load up the client library and JSON RPC
-#NEW VERSION WITH AUTO START / STOP SERVICE
+
 use Server;
 my ($pid, $url) = Server::start('ProteinInfoService');
 print "-> attempting to connect to:'".$url."' with PID=$pid\n";
-#my $client = new_ok("Bio::KBase::ProteinInfoService::Client", [$host_addr]);
-my $client = Bio::KBase::ProteinInfoService::Client->new($url);
-
+my $client = new_ok("Bio::KBase::ProteinInfoService::Client",[$url] );
 $num_tests++;
 
 ##########
@@ -94,7 +89,7 @@ my $method_calls = {
 
 foreach my $call (keys %{ $method_calls }) {
 	my $result;
-	print "Testing function \"$call\"\n";
+	print "\nTesting function \"$call\"\n";
 	{
 		no strict "refs";
 		eval { $result = $client->$call($method_calls->{$call}->{happy}); };
