@@ -1096,7 +1096,9 @@ a reference to a list where each element is a string
 =item Description
 
 An operon is represented by a list of fids
-which make up that operon.
+which make up that operon.  The order within the list is not
+defined; the fids_to_locations method can report on the
+order of the fids in the operon.
 
 
 =item Definition
