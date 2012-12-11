@@ -16,10 +16,27 @@ use warnings;
 use Test::More;
 use Test::Deep;
 use Data::Dumper;
+use Getopt::Long;
+
 use lib "lib";
 use lib "t/client-tests";
 
 my $num_tests = 0;
+my $debug=0;
+my $localServer=0;
+my $host='localhost';
+my $port;
+my $serviceName;
+
+my $getoptResult=GetOptions(
+        'debug' =>      \$debug,
+        'localServer'   =>      \$localServer,
+        'host=s'        =>      \$host,
+        'port=i'        =>      \$port,
+        'serviceName=s' =>      \$serviceName,
+);
+
+
 
 ##########
 # Make sure we locally load up the client library and JSON RPC
@@ -31,10 +48,12 @@ $num_tests += 2;
 # Make sure we can instantiate a client
 
 use Server;
-my ($pid, $url) = Server::start('ProteinInfoService');
-print "-> attempting to connect to:'".$url."' with PID=$pid\n";
-my $client = new_ok("Bio::KBase::ProteinInfoService::Client",[$url] );
-$num_tests++;
+my ($url,$pid);
+# would be good to extract the port from a config file or env variable
+$url="http://$host:$port/" unless ($localServer);
+# Start a server on localhost if desired
+($pid, $url) = Server::start($serviceName) unless ($url);
+print "Testing service $serviceName on $url\n";
 
 ##########
 # Make sure the client is of the right class
@@ -153,6 +172,6 @@ note("test $num_tests and method $method_calls\n");
 	$num_tests++;
 }
 
-Server::stop($pid);
+Server::stop($pid) if ($pid);
 done_testing($num_tests);
 
