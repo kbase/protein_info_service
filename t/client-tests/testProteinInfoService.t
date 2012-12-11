@@ -8,6 +8,7 @@
 # November 28, 2012
 # November Build Meeting @ Argonne
 # updated 12/6/2012 landml
+# more updates 12 dec 2012 kkeller
 ###############################################################################
 
 use strict;
@@ -25,8 +26,8 @@ my $num_tests = 0;
 my $debug=0;
 my $localServer=0;
 my $host='localhost';
-my $port;
-my $serviceName;
+my $port=7057;
+my $serviceName='ProteinInfoService';
 
 my $getoptResult=GetOptions(
         'debug' =>      \$debug,
