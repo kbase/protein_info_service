@@ -56,6 +56,9 @@ $url="http://$host:$port/" unless ($localServer);
 print "Testing service $serviceName on $url\n";
 
 ##########
+my $client = new_ok("Bio::KBase::ProteinInfoService::Client",[$url] );
+$num_tests++;
+
 # Make sure the client is of the right class
 isa_ok($client, "Bio::KBase::ProteinInfoService::Client", "Is it the right class?");
 $num_tests++;
