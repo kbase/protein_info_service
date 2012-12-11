@@ -631,7 +631,10 @@ sub fids_to_orthologs
 		foreach my $moOrthLocusId (keys %$moOrthologs2fids)
 		{
 			next unless ref $moOrthologs2fids->{$moOrthLocusId};
-			$kbOrthologs{$moOrthologs2fids->{$moOrthLocusId}}=1;
+			foreach my $orthFid (@{$moOrthologs2fids->{$moOrthLocusId}})
+			{
+				$kbOrthologs{$orthFid}=1;
+			}
 #			push @{$return->{$fid}},@{$moOrthologs2fids->{$moOrthLocusId}};
 		}
 		my @kbOrthologs=keys %kbOrthologs;
