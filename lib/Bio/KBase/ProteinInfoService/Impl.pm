@@ -40,7 +40,10 @@ sub new
 	my $kb = Bio::KBase->new();
 #	my $kbIdServer = $kb->id_server();
 	my $kbCDM = $kb->central_store;
-	my $kbMOT = Bio::KBase::MOTranslationService::Client->new('http://10.0.8.147/services/translation');
+	# this is the production instance
+	my $kbMOT = Bio::KBase::MOTranslationService::Client->new('http://kbase.us/services/translation');
+	# this is a test instance
+#	my $kbMOT = Bio::KBase::MOTranslationService::Client->new('http://10.0.8.147/services/translation');
 #	my $moDbh=DBI->connect("DBI:mysql:genomics:db1.chicago.kbase.us",'genomics');
 
 	my $dbms='mysql';
