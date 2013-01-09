@@ -25,7 +25,8 @@ use lib "t/client-tests";
 my $num_tests = 0;
 my $debug=0;
 my $localServer=0;
-my $uri='http://140.221.92.231/services/protein_info_service';
+#my $uri='http://140.221.92.231/services/protein_info_service';
+my $uri='http://kbase.us/services/protein_info_service';
 my $serviceName='ProteinInfoService';
 
 my $getoptResult=GetOptions(
@@ -51,7 +52,7 @@ my ($url,$pid);
 # would be good to extract the port from a config file or env variable
 $url=$uri unless ($localServer);
 # Start a server on localhost if desired
-($pid, $url) = Server::start($serviceName) unless ($url);
+($pid, $url) = Server::start($serviceName) if ($localServer);
 print "Testing service $serviceName on $url\n";
 
 ##########
