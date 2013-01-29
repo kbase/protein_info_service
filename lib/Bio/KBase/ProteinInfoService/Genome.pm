@@ -11,7 +11,7 @@ Genome - interface to Genome object from ESPP genomics database
 =head1 SYNOPSIS
 
     use Genome;
-    my $genome=Genome::new(taxonomyId=>$taxId);
+    my $genome=Bio::KBase::ProteinInfoService::Genome::new(taxonomyId=>$taxId);
     my $name=$genome->name;
     my @genes=$genome->genes;
     # do stuff
@@ -125,11 +125,11 @@ sub new{
     
     unless ($params{'skipScaffolds'})
     {
-    	my @scaffoldIds = GenomicsUtils::queryList( qq{ SELECT scaffoldId FROM Scaffold WHERE taxonomyId=$taxonomyId AND isActive=1 } );
+    	my @scaffoldIds = Bio::KBase::ProteinInfoService::GenomicsUtils::queryList( qq{ SELECT scaffoldId FROM Scaffold WHERE taxonomyId=$taxonomyId AND isActive=1 } );
 
     	my @scaffolds;
     	foreach my $sId (@scaffoldIds){
-			push @scaffolds, Scaffold::new(
+			push @scaffolds, Bio::KBase::ProteinInfoService::Scaffold::new(
 				scaffoldId => $sId , cacheScaffolds=>$params{'cacheScaffolds'}
 				);
 	    }
@@ -143,7 +143,7 @@ sub new{
 	$self->{shortName_} = $params{'shortName'};
 	$self->{placement_} = $params{'placement'};
     }else {
-		my $queryResult=GenomicsUtils::query( "SELECT name, shortName, placement FROM Taxonomy WHERE taxonomyId=$taxonomyId" );
+		my $queryResult=Bio::KBase::ProteinInfoService::GenomicsUtils::query( "SELECT name, shortName, placement FROM Taxonomy WHERE taxonomyId=$taxonomyId" );
 		return undef unless $queryResult->[0];
 		($self->{name_}, $self->{shortName_}, $self->{placement_}) =
 	    @{$queryResult->[0]};
@@ -233,7 +233,7 @@ Returns a marked-up classification (with HTML links to NCBI).
 sub getPath{
     my $self = shift;
     my $tId = $self->taxonomyId();
-    my $pathR = GenomicsUtils::query(qq{SELECT TaxName.taxonomyId, name FROM TaxParentChild, TaxName WHERE childId=$tId AND TaxName.taxonomyId=parentId and TaxName.class="scientific name" and parentId not in (1, 131567) order by TaxParentChild.nDistance desc});
+    my $pathR = Bio::KBase::ProteinInfoService::GenomicsUtils::query(qq{SELECT TaxName.taxonomyId, name FROM TaxParentChild, TaxName WHERE childId=$tId AND TaxName.taxonomyId=parentId and TaxName.class="scientific name" and parentId not in (1, 131567) order by TaxParentChild.nDistance desc});
     my @path;
     foreach my $row (@$pathR){
 	if ($row->[0] > 0 && $row->[0] < 1000000000000) {
@@ -266,7 +266,7 @@ sub hasGenomicScaffolds {
 	# object method; it's a lot faster without creating the genome object
 	my $taxonomyId=$self; # $self is not an object
 	my $query="SELECT count(*) FROM Scaffold WHERE isActive=1 AND isGenomic=1 AND taxonomyId=$taxonomyId";
-	my $count=GenomicsUtils::queryScalar($query);
+	my $count=Bio::KBase::ProteinInfoService::GenomicsUtils::queryScalar($query);
 	return $count;
 }
 
@@ -312,7 +312,7 @@ sub basicInfo{
 	    GROUP BY s.scaffoldId
 	    ORDER BY s.isGenomic DESC
     };
-    my $infoR = GenomicsUtils::query($sql);
+    my $infoR = Bio::KBase::ProteinInfoService::GenomicsUtils::query($sql);
     my %info = ();
     my $flag = 'genomic';
     my $count = 0;
@@ -366,7 +366,7 @@ sub basicInfo{
     return \%info;
 }
 
-# Passes along arguments, ultimately reaching Scaffold::fetchGenesListRef
+# Passes along arguments, ultimately reaching Bio::KBase::ProteinInfoService::Scaffold::fetchGenesListRef
 sub genes{
     my $self = shift;
     return map {$_->genes(@_)} $self->scaffolds();
@@ -391,13 +391,13 @@ sub nongenomicGenes{
 sub getOrfIdsByName($@) {
     my $self = shift;
     my @names = @_;
-    my $hash = GenomicsUtils::queryHashList( "SELECT DISTINCT s.name,s.locusId from Synonym s,Locus o,Position p,Scaffold sc"
+    my $hash = Bio::KBase::ProteinInfoService::GenomicsUtils::queryHashList( "SELECT DISTINCT s.name,s.locusId from Synonym s,Locus o,Position p,Scaffold sc"
 			       . " WHERE sc.taxonomyId=" . $self->taxonomyId()
 			       . " AND s.locusId=o.locusId and o.posId=p.posId AND p.scaffoldId=sc.scaffoldId"
 			       . " AND s.name IN (" . join(",",map("'$_'",@names)) . ")" );
     my @numeric = grep m/^[0-9]+/, @names;
     if (scalar @numeric > 0) {
-	map { addToHashList($hash, $_, $_) } GenomicsUtils::queryList("SELECT o.locusId FROM Locus o,Position p,Scaffold sc"
+	map { addToHashList($hash, $_, $_) } Bio::KBase::ProteinInfoService::GenomicsUtils::queryList("SELECT o.locusId FROM Locus o,Position p,Scaffold sc"
 							. " WHERE sc.taxonomyId=" . $self->taxonomyId()
 							. " AND o.locusId IN (" . join(",",@numeric) . ")"
 							. " AND o.posId=p.posId AND p.scaffoldId=sc.scaffoldId");
@@ -411,14 +411,14 @@ sub getGenomeMap{
 
 sub getGenomeList{
     my %params = @_;
-    return map { Genome::new('taxonomyId' => $_,$params{'skipScaffold'}) } GenomicsUtils::queryList("SELECT DISTINCT t.taxonomyId FROM Taxonomy t JOIN Scaffold s USING (taxonomyId) WHERE s.isActive=1");
+    return map { Genome::new('taxonomyId' => $_,$params{'skipScaffold'}) } Bio::KBase::ProteinInfoService::GenomicsUtils::queryList("SELECT DISTINCT t.taxonomyId FROM Taxonomy t JOIN Scaffold s USING (taxonomyId) WHERE s.isActive=1");
 }
 
 # list of taxonomyIds to list of child taxonomyIds
 # only those loaded in the database
 sub getChildTaxa{
     return () if scalar @_ == 0;
-    return GenomicsUtils::queryList("SELECT DISTINCT childId FROM TaxParentChild, Taxonomy, Scaffold"
+    return Bio::KBase::ProteinInfoService::GenomicsUtils::queryList("SELECT DISTINCT childId FROM TaxParentChild, Taxonomy, Scaffold"
 				    . " WHERE parentId IN (" . join(",", @_) . ")"
 				    . " AND Taxonomy.taxonomyId=childId"
 				    . " AND Taxonomy.taxonomyId=Scaffold.taxonomyId AND Scaffold.isActive=1"
@@ -428,7 +428,7 @@ sub getChildTaxa{
 sub pmid{
     my $self = shift;
     my $taxId = $self->taxonomyId();
-    my $queryR = GenomicsUtils::query(qq{SELECT PMID FROM Taxonomy where taxonomyId=$taxId});
+    my $queryR = Bio::KBase::ProteinInfoService::GenomicsUtils::query(qq{SELECT PMID FROM Taxonomy where taxonomyId=$taxId});
     return undef unless $queryR->[0][0];
     return $queryR->[0][0];
 
@@ -437,7 +437,7 @@ sub pmid{
 sub ncbiProjectId{
     my $self = shift;
     my $taxId = $self->taxonomyId();
-    my $queryR = GenomicsUtils::query(qq{SELECT ncbiProjectId FROM Taxonomy where taxonomyId=$taxId});
+    my $queryR = Bio::KBase::ProteinInfoService::GenomicsUtils::query(qq{SELECT ncbiProjectId FROM Taxonomy where taxonomyId=$taxId});
     return undef unless $queryR->[0][0];
     return $queryR->[0][0];
 
@@ -446,7 +446,7 @@ sub ncbiProjectId{
 sub publication{
     my $self = shift;
     my $taxId = $self->taxonomyId();
-    my $queryR = GenomicsUtils::query(qq{SELECT Publication FROM Taxonomy where taxonomyId=$taxId});
+    my $queryR = Bio::KBase::ProteinInfoService::GenomicsUtils::query(qq{SELECT Publication FROM Taxonomy where taxonomyId=$taxId});
     return undef unless $queryR->[0][0];
     return $queryR->[0][0];
 
@@ -456,7 +456,7 @@ sub publication{
 sub lineage{
     my %info = @_;
     my $taxId = $info{taxonomyId};
-    my $parentR = GenomicsUtils::query(qq{SELECT T.rank, t.name, T.parentId FROM TaxNode T, TaxName t WHERE t.taxonomyId=T\
+    my $parentR = Bio::KBase::ProteinInfoService::GenomicsUtils::query(qq{SELECT T.rank, t.name, T.parentId FROM TaxNode T, TaxName t WHERE t.taxonomyId=T\
 					      .taxonomyId AND t.class="Scientific name" AND T.taxonomyId=$taxId});
     my ($rank, $name, $parentId) = @{$parentR->[0]};
     #$lineage{$parentRank} = $parentName;                                                                                  
@@ -597,7 +597,7 @@ my $out=join "\t",qw(locusId	accession	GI	scaffoldId start	stop	strand	sysName	n
 $out.="\n";
 
 my $species=$self->name;
-my $locusTypes=GenomicsUtils::queryHashList('SELECT type,description FROM LocusType');
+my $locusTypes=Bio::KBase::ProteinInfoService::GenomicsUtils::queryHashList('SELECT type,description FROM LocusType');
 
 foreach my $scaffold ($self->scaffolds, $self->nongenomicScaffolds)
 {
@@ -638,7 +638,7 @@ my $self=shift;
 my $params=shift;
 my $exportType=$params->{exportType};
 
-my $locusTypes=GenomicsUtils::queryHashList('SELECT type,description FROM LocusType');
+my $locusTypes=Bio::KBase::ProteinInfoService::GenomicsUtils::queryHashList('SELECT type,description FROM LocusType');
 
 my $out;
 
@@ -655,7 +655,7 @@ foreach my $scaffold ($self->scaffolds, $self->nongenomicScaffolds)
 		my $sequence;
 		$sequence = $gene->dna if ($exportType eq 'transcriptomes');
 		$sequence = $gene->protein if ($exportType eq 'proteomes');
-		$out.=GenomicsUtils::formatFASTA($fastaHeader,$sequence);
+		$out.=Bio::KBase::ProteinInfoService::GenomicsUtils::formatFASTA($fastaHeader,$sequence);
 	}
 }
 
@@ -699,7 +699,7 @@ my %params=@_;
 my $userId=$params{'userid'} || 1;
 
 # gives a list of all non-''private'' expIds
-my @allExpIds=GenomicsUtils::queryList('
+my @allExpIds=Bio::KBase::ProteinInfoService::GenomicsUtils::queryList('
 	SELECT e.id FROM microarray.Exp e
 	JOIN microarray.Chip c ON (e.chipId=c.id)
 	WHERE e.isPrivate="n"

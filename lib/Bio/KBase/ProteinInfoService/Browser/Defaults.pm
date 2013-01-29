@@ -87,10 +87,12 @@ $defaults->{webHost}			.= ":$ENV{SERVER_PORT}"
 	if ( exists($ENV{SERVER_PORT}) &&
 		(length($ENV{SERVER_PORT}) > 0) &&
 		($ENV{SERVER_PORT} ne '80') );
-$defaults->{dbHost}			= "localhost";
-$defaults->{dbDatabase}			= ($defaults->{showMeta}) ? "meta2010jul" : "genomics_test";
-$defaults->{dbUser}			= "test";
-$defaults->{dbPassword}			= "test";
+#$defaults->{dbHost}			= "localhost";
+$defaults->{dbHost}			= "140.221.84.194";
+#$defaults->{dbDatabase}			= ($defaults->{showMeta}) ? "meta2010jul" : "genomics_test";
+$defaults->{dbDatabase}			= "***REMOVED***";
+$defaults->{dbUser}			= "genomics";
+$defaults->{dbPassword}			= undef;
 $defaults->{dbType}			= "mysql";
 
 $defaults->{cookieExpire}		= "+12h";
