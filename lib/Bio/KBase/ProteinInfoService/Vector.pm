@@ -119,7 +119,7 @@ our (@ISA, @EXPORT);
 	while(<READMAT>) {
 	    s/[\r\n]+$//;
 	    my @F = split /\t/, $_;
-	    die "Wrong number of columns in Vector::readMatrix(\"$file\") -- compare header line\n"
+	    die "Wrong number of columns in Bio::KBase::ProteinInfoService::Vector::readMatrix(\"$file\") -- compare header line\n"
 		. join("\t",@columns)
 		. "\n to \n".join("\t",@F)."\n..."
 		if scalar(@F) != scalar(@columns)+1;
@@ -128,7 +128,7 @@ our (@ISA, @EXPORT);
 		s/^ +//;
 		s/ +$//;
 		# Note: ?= does lookahead (checks for the presence of the pattern without affecting downstream matching)
-		die "Non-numeric value $_ in row $rows[-1] in Vector::readMatrix(\"$file\")"
+		die "Non-numeric value $_ in row $rows[-1] in Bio::KBase::ProteinInfoService::Vector::readMatrix(\"$file\")"
 		    unless /^([+-]?)(?=\d|\.\d)\d*(\.\d*)?([Ee]([+-]?\d+))?$/
 	    }
 	    push @values, \@F;

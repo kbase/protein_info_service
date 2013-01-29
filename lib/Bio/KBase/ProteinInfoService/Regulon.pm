@@ -21,7 +21,7 @@ sub transFactors; # return a list of Gene objects that are putative TFs
 
 sub new{
     my %params = @_; #keys are: clusterId
-    die "No clusterId declared in Regulon::new()" unless defined($params{clusterId});
+    die "No clusterId declared in Bio::KBase::ProteinInfoService::Regulon::new()" unless defined($params{clusterId});
     my $self = {};
     bless $self;
     my $sql = qq{
@@ -32,7 +32,7 @@ sub new{
 
     };
 
-    my $queryR = GenomicsUtils::query($sql);
+    my $queryR = Bio::KBase::ProteinInfoService::GenomicsUtils::query($sql);
 
     return undef if @$queryR == 0;
 
@@ -40,7 +40,7 @@ sub new{
     $self->{clusterId_} = $params{clusterId};
     foreach (@$queryR){
 	push @{$self->{lociID_}}, $_->[0];
-	push @{$self->{loci_}}, Gene::new(locusId=>$_->[0]);
+	push @{$self->{loci_}}, Bio::KBase::ProteinInfoService::Gene::new(locusId=>$_->[0]);
     }
     return $self;
 }
@@ -65,7 +65,7 @@ sub links{
     my $self = shift;
     my $clusterId = $self->clusterId();
     my %params = @_; # keys: linkType # values: linkType eq "m" or "g"
-    die "No linkType provided in Regulon::links()" unless defined($params{linkType});
+    die "No linkType provided in Bio::KBase::ProteinInfoService::Regulon::links()" unless defined($params{linkType});
     $params{linkType} = $params{linkType} eq 'm'?"MAcorr":"GNScore";
     unless (defined($self->{link_}{$params{linkType}})){
 	my $sql = qq{
@@ -74,7 +74,7 @@ sub links{
 	    WHERE cluster1=$clusterId
 	    AND link="$params{linkType}"
 	};
-	my $queryR = GenomicsUtils::query($sql);
+	my $queryR = Bio::KBase::ProteinInfoService::GenomicsUtils::query($sql);
 	return if scalar(@$queryR) == 0;
 	foreach (@$queryR){
 	    push @{$self->{link_}{$params{linkType}}}, new(clusterId=>$_->[0]);
@@ -87,7 +87,7 @@ sub transFactors{
     my $self = shift;
     my $loci = join ",", @{$self->{lociID_}};
     unless (defined($self->{tf_})) {
-	my $goTerm = GenomicsUtils::queryScalar('SELECT id FROM term where acc="GO:0003700"');
+	my $goTerm = Bio::KBase::ProteinInfoService::GenomicsUtils::queryScalar('SELECT id FROM term where acc="GO:0003700"');
 	my $sql = qq{
 	    SELECT distinct(locusId) 
 	    FROM Locus2Go 
@@ -95,10 +95,10 @@ sub transFactors{
 	    AND locusId in ($loci)
 	};
 			   
-	my $queryR = GenomicsUtils::query($sql);
+	my $queryR = Bio::KBase::ProteinInfoService::GenomicsUtils::query($sql);
 	return if scalar(@$queryR) == 0;
 	foreach (@$queryR){
-	    push @{$self->{tf_}}, Gene::new(locusId=>$_->[0]);
+	    push @{$self->{tf_}}, Bio::KBase::ProteinInfoService::Gene::new(locusId=>$_->[0]);
 	}
     }
     return @{$self->{tf_}};
