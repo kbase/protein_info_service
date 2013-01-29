@@ -11,8 +11,9 @@ ProteinInfo
 
 =head1 DESCRIPTION
 
-This module provides various annotations about proteins, including
-domain annotations, orthologs in other genomes, and operons.
+Given a feature ID that is a protein, the protein info service
+returns various annotations such as domain annotations, orthologs
+in other genomes, and operons.
 
 =cut
 
