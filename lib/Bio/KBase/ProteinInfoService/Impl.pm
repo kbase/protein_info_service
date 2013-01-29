@@ -47,8 +47,8 @@ sub new
 #	my $moDbh=DBI->connect("DBI:mysql:genomics:db1.chicago.kbase.us",'genomics');
 
 	my $dbms='mysql';
-	my $dbName='genomics';
-	my $user='genomics';
+	my $dbName='guest';
+	my $user='guest';
 	my $pass=undef;
 	my $port=3306;
 	my $dbhost='db1.chicago.kbase.us';
