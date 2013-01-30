@@ -854,9 +854,11 @@ sub fids_to_orthologs_local
 	# this is not the best way, but should work
 	foreach my $fid (keys %$fids2externalIds)
 	{
-		my $response=$ua->post("http://www.microbesonline.org/cgi-bin/getOrthologs",Content=>{locusId=>$fids2externalIds->{$fid}[0]});
-		my $json=from_json($response->content);
-		my $moOrthologs=$json->{$fids2externalIds->{$fid}[0]};
+		#my $response=$ua->post("http://www.microbesonline.org/cgi-bin/getOrthologs",Content=>{locusId=>$fids2externalIds->{$fid}[0]});
+		#my $json=from_json($response->content);
+    	        my $gene = Bio::KBase::ProteinInfoService::Gene::new( locusId => $fids2externalIds->{$fid}[0]);
+		# my $moOrthologs=$json->{$fids2externalIds->{$fid}[0]};
+		my $moOrthologs = $gene->getOrthologListRef()
 		my $moOrthologs2fids=$kbMOT->moLocusIds_to_fids($moOrthologs);
 
 		my %kbOrthologs;
