@@ -26,6 +26,11 @@ use Bio::KBase;
 use Bio::KBase::MOTranslationService::Client;
 use DBKernel;
 
+# This use statement drags in a whole boatload of MO stuff along with
+# it - will need to be pruned down
+# sychan 1/30/2013
+use Bio::KBase::ProteinInfoService::Gene;
+
 #use ContextAdapter;
 
 #END_HEADER
@@ -42,16 +47,18 @@ sub new
 #	my $kbIdServer = $kb->id_server();
 	my $kbCDM = $kb->central_store;
 	# this is the production instance
-	my $kbMOT = Bio::KBase::MOTranslationService::Client->new('http://kbase.us/services/translation');
+	#my $kbMOT = Bio::KBase::MOTranslationService::Client->new('http://kbase.us/services/translation');
 	# this is a test instance
-#	my $kbMOT = Bio::KBase::MOTranslationService::Client->new('http://10.0.8.147/services/translation');
+	my $kbMOT = Bio::KBase::MOTranslationService::Client->new('http://140.221.92.231/services/translation');
 #	my $moDbh=DBI->connect("DBI:mysql:genomics:db1.chicago.kbase.us",'genomics');
 
-        my $gene = Bio::KBase::ProteinInfoService::Gene->new();
+        # Need to initialize the database handler for that Bio::KBase::ProteinInfoService::Gene depends on
+        # the GenomicsUtils module caches the database handle internally
+        my $gene_dbh = Bio::KBase::ProteinInfoService::GenomicsUtils::dbConnect();
 	my $dbms='mysql';
 	my $dbName='genomics';
-	my $user='genomics';
-	my $pass=undef;
+	my $user='guest';
+	my $pass='guest';
 	my $port=3306;
 	my $dbhost='db1.chicago.kbase.us';
 	my $sock='';
@@ -62,7 +69,7 @@ sub new
 	$self->{kbCDM}=$kbCDM;
 	$self->{kbMOT}=$kbMOT;
 	$self->{moDbh}=$moDbh;
-        $self->{gene} = $gene
+        $self->{gene_dbh} = $gene_dbh;
     #END_CONSTRUCTOR
 
     if ($self->can('_init_instance'))
@@ -857,7 +864,9 @@ sub fids_to_orthologs_local
 		#my $json=from_json($response->content);
     	        my $gene = Bio::KBase::ProteinInfoService::Gene::new( locusId => $fids2externalIds->{$fid}[0]);
 		# my $moOrthologs=$json->{$fids2externalIds->{$fid}[0]};
-		my $moOrthologs = $gene->getOrthologListRef()
+		my $moOrthologList = $gene->getOrthologListRef();
+		my @moOrthologArray = map { $_->{'locusId_'} } @$moOrthologList;
+		my $moOrthologs = \@moOrthologArray;
 		my $moOrthologs2fids=$kbMOT->moLocusIds_to_fids($moOrthologs);
 
 		my %kbOrthologs;
