@@ -28,6 +28,11 @@ module ProteinInfo {
 	typedef float neighbor_threshold;
 
 	/*
+	Neighbor is a tuple of fid and a neighbor score
+	*/
+	typedef tuple<fid, float> neighbor;
+
+	/*
 	Domains are a list of domain_ids.
 	*/
 	typedef list<string> domains;
@@ -114,9 +119,16 @@ module ProteinInfo {
 	funcdef fids_to_go (list<fid> fids) returns (mapping<fid,go>);
 
 	/*
-	fids_to_neighbords takes as input a list of feature ids, and
-	returns a mapping of each fid to its neighbors, based on a
-	neighbor scoring */
-	funcdef fids_to_neighbords(list<fid> fids, neighbor_threshold) returns (mapping<fid, list<fid>>);
+	fid_to_neighbor takes as input a single feature id, and
+	a neighhbor score threshold and returns a list of neighbors
+	where neighbor score >= threshold */
+	funcdef fid_to_neighbors(fid id, neighbor_threshold thresh) returns (list<neighbor>);
+
+	/*
+	fids_to_neighbors takes as input a list of feature ids, and
+	a minimal neighbor score, and returns a mapping of each fid to
+	its neighbors, based on neighbor score >= threshold */
+	funcdef fids_to_neighbors(list<fid> fids, neighbor_threshold thresh) returns (mapping<fid, list<neighbor>>);
+
 
 };
