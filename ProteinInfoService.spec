@@ -120,15 +120,15 @@ module ProteinInfo {
 
 	/*
 	fid_to_neighbor takes as input a single feature id, and
-	a neighhbor score threshold and returns a list of neighbors
+	a neighbor score threshold and returns a list of neighbors
 	where neighbor score >= threshold */
 	funcdef fid_to_neighbors(fid id, neighbor_threshold thresh) returns (list<neighbor>);
 
 	/*
-	fids_to_neighbors takes as input a list of feature ids, and
+	fidlist_to_neighbors takes as input a list of feature ids, and
 	a minimal neighbor score, and returns a mapping of each fid to
 	its neighbors, based on neighbor score >= threshold */
-	funcdef fids_to_neighbors(list<fid> fids, neighbor_threshold thresh) returns (mapping<fid, list<neighbor>>);
+	funcdef fidlist_to_neighbors(list<fid> fids, neighbor_threshold thresh) returns (mapping<fid, list<neighbor>>);
 
 
 };

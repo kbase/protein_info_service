@@ -1,4 +1,4 @@
-package Browser::Colors;
+package Bio::KBase::ProteinInfoService::Browser::Colors;
 require Exporter;
 
 use GD;

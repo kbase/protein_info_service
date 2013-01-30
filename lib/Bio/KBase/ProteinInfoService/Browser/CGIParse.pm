@@ -1,10 +1,10 @@
-package Browser::CGIParse;
+package Bio::KBase::ProteinInfoService::Browser::CGIParse;
 require Exporter;
 
 use strict;
 use CGI;
-use Browser::Defaults;
-use Browser::Utils;
+use Bio::KBase::ProteinInfoService::Browser::Defaults;
+use Bio::KBase::ProteinInfoService::Browser::Utils;
 
 use vars '$VERSION';
 use vars qw($defaults);

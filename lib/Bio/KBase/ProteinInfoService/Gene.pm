@@ -16,26 +16,26 @@ BEGIN {
 	# surprisingly, only need this in BEGIN; I guess it stays in
 	# @INC after the BEGIN block terminates
 	# turn off warnings in case the user hasn't defined SANDBOX_DIR
-	no warnings 'uninitialized';
-	use lib "$ENV{SANDBOX_DIR}/RegTransBase/perllib";
-	use lib "$ENV{SANDBOX_DIR}/fasthmm/lib";
-	use warnings;
+	#no warnings 'uninitialized';
+	#use lib "$ENV{SANDBOX_DIR}/RegTransBase/perllib";
+	#use lib "$ENV{SANDBOX_DIR}/fasthmm/lib";
+	#use warnings;
 	# this is just to test whether things exist
 	# needs to be a require so that it's run-time, not compile-time
-	eval {
-		require Bio::KBase::ProteinInfoService::RegTransBase::Integration::MicrobesOnline;
-		require Bio::KBase::ProteinInfoService::RegTransBase::Search;
-	};
+	#eval {
+	#	require Bio::KBase::ProteinInfoService::RegTransBase::Integration::MicrobesOnline;
+	#	require Bio::KBase::ProteinInfoService::RegTransBase::Search;
+	#};
 
 	# use RTB later unless eval had a problem with the above requires
-	$useRTB=1 unless ($@);
+	#$useRTB=1 unless ($@);
 
-	eval {
-		require FastBLAST;
-	};
+	#eval {
+	#	require FastBLAST;
+	#};
 
 	# use FastBLAST later unless eval had a problem with the above requires
-	$useFastBLAST=1 unless ($@);
+	#$useFastBLAST=1 unless ($@);
 
 	# $debug is not available yet, so uncomment if you want to see the eval msg
 	# warn $@ if $@;
