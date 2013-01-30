@@ -8,9 +8,9 @@ GenomicsUtils - low-level utilities for ESPP genomics db interaction
 
 =head1 SYNOPSIS
 
-    use GenomicsUtils;
-	# deprecated: use Browser::DB::dbConnect() instead
-    my $dbh=GenomicsUtils::connect('dbhost');
+    use Bio::KBase::ProteinInfoService::GenomicsUtils;
+	# deprecated: use Bio::KBase::ProteinInfoService::Browser::DB::dbConnect() instead
+    my $dbh=Bio::KBase::ProteinInfoService::GenomicsUtils::connect('dbhost');
     # do stuff
 
 =head1 DESCRIPTION
@@ -182,7 +182,7 @@ sub connect
 
     $host = "$host.qb3.berkeley.edu" unless $host eq "localhost" || $host =~ m/\./;
 
-	Browser::DB::dbConnect($host,$user_name,$password,$dbname);
+	Bio::KBase::ProteinInfoService::Browser::DB::dbConnect($host,$user_name,$password,$dbname);
 	my $dbh = Bio::KBase::ProteinInfoService::Browser::DB::dbHandle;
 
     return $dbh;

@@ -129,7 +129,7 @@ sub new{
     my ($chrNumber, $length, $file,
 	$taxonomyId, $taxonomyName, $taxShortName, $isCircular,
 	$isPartial, $isGenomic, $isActive,
-	$comment ) =  Browser::DB::dbHandle()->selectrow_array( qq/ SELECT chr_num, length, file, s.taxonomyId, t.name, t.shortName,
+	$comment ) =  Bio::KBase::ProteinInfoService::Browser::DB::dbHandle()->selectrow_array( qq/ SELECT chr_num, length, file, s.taxonomyId, t.name, t.shortName,
 							     isCircular, isPartial, isGenomic, isActive, comment
 							     FROM Scaffold s, Taxonomy t WHERE scaffoldId='$scaffoldId' AND s.taxonomyId=t.taxonomyId / );
 
@@ -235,7 +235,7 @@ sub sequenceRef(){
     if ( !defined( $self->{sequence_} ) ) {
 	my $scaffoldId = $self->{scaffoldId_}; 
 	$self->{sequence_} =
-	    \ GenomicsUtils::query( qq/SELECT sequence FROM ScaffoldSeq
+	    \ Bio::KBase::ProteinInfoService::GenomicsUtils::query( qq/SELECT sequence FROM ScaffoldSeq
 				  WHERE scaffoldId=$scaffoldId/ )->[0][0];
     } 
     return $self->{sequence_}; 
@@ -280,9 +280,9 @@ sub subsequence() {
 	my $start = $begin < $end ? $begin : $end;
 	my $len = abs($end-$begin) + 1;
 	my $scaffoldId = $self->{scaffoldId_}; 
-	my $seq = GenomicsUtils::queryScalar(qq{SELECT SUBSTRING(sequence,$start,$len) FROM ScaffoldSeq
+	my $seq = Bio::KBase::ProteinInfoService::GenomicsUtils::queryScalar(qq{SELECT SUBSTRING(sequence,$start,$len) FROM ScaffoldSeq
 						    WHERE scaffoldId = $scaffoldId});
-	return( $begin > $end ? GenomicsUtils::reverseComplement($seq) : $seq );
+	return( $begin > $end ? Bio::KBase::ProteinInfoService::GenomicsUtils::reverseComplement($seq) : $seq );
     }
 }
 
@@ -295,7 +295,7 @@ sub subseq() {
     $end--;
     return substr($$ref, $begin, 1+$end-$begin) if ($begin < $end);
     #else
-    return GenomicsUtils::reverseComplement(substr($$ref, $end, 1+$begin-$end));
+    return Bio::KBase::ProteinInfoService::GenomicsUtils::reverseComplement(substr($$ref, $end, 1+$begin-$end));
 }
 
 sub genes(){
@@ -413,7 +413,7 @@ sub fetchGenesListRef{
 
     my $query = join " AND ", @query;
     my $statement = qq/SELECT p.begin, p.end, p.strand, o.locusId, o.version, o.posId, o.type, c.cogInfoId, s.scaffoldId FROM Scaffold s, Position p, Locus o  LEFT JOIN COG c ON (o.locusId=c.locusId AND o.version=c.version) WHERE $query AND p.scaffoldId=s.scaffoldId AND o.posId=p.posId ORDER BY s.scaffoldId, begin, o.locusId/;
-    my $refGenes = GenomicsUtils::query( $statement );
+    my $refGenes = Bio::KBase::ProteinInfoService::GenomicsUtils::query( $statement );
     my @loci = map { $_->[3] } @$refGenes;
     return [] if @loci==0;
     my $locusReqShort = "locusId IN (".join(",",@loci).")";
@@ -432,7 +432,7 @@ sub fetchGenesListRef{
 		# note: module does not support multiple values for a synonym, so join them by ","
 		$statement = qq/SELECT DISTINCT o.locusId, sy.name, sy.type  FROM Locus o JOIN Synonym sy ON (o.locusId=sy.locusId AND o.version=sy.version) WHERE $locusReq/;
 		my $synonymRef = {};
-		foreach my $row (@{ GenomicsUtils::query( $statement ) }) {
+		foreach my $row (@{ Bio::KBase::ProteinInfoService::GenomicsUtils::query( $statement ) }) {
 		    my ($locusId,$name,$type) = @$row;
 		    $synonymRef->{$locusId} = {} unless exists $synonymRef->{$locusId};
 		    if (exists $synonymRef->{$locusId}{$type}) {
@@ -446,7 +446,7 @@ sub fetchGenesListRef{
 		$statement = qq/SELECT o.locusId, a.description, a.source 
 		                FROM Locus o JOIN Description a USING (locusId,version)
 				WHERE $locusReq/;
-		my $results =  GenomicsUtils::query( $statement );
+		my $results =  Bio::KBase::ProteinInfoService::GenomicsUtils::query( $statement );
 		my $descriptionHash = {};
 		foreach (@$results) {
 		    $descriptionHash->{$_->[0]} = $_->[1]. " (" . $_->[2] . ")";
@@ -467,7 +467,7 @@ sub fetchGenesListRef{
 		# in the self genome
 		my %mogTax = (); # mogId => tax2 => list of locus2
 		my %selfTax = (); # locus1 => tax1
-		my $results = GenomicsUtils::query($statement);
+		my $results = Bio::KBase::ProteinInfoService::GenomicsUtils::query($statement);
 		foreach my $row (@$results) {
 		    my ($locusId, $start2, $stop2, $strand2, $locusId2,
 			$version2, $type2, $posId2, $cog2, $scaffold2,
@@ -495,7 +495,7 @@ sub fetchGenesListRef{
 					  strand => $strand2, locusId => $locusId2,
 					  version => $version2, type => $type2, posId => $posId2,
 					  cogInfoId => $cog2, scaffoldId => $scaffold2 );
-		    GenomicsUtils::addToHashList($orthologsRef, $locusId, $gene);
+		    Bio::KBase::ProteinInfoService::GenomicsUtils::addToHashList($orthologsRef, $locusId, $gene);
 		}
 		$preloaded{ortholog} = $orthologsRef;
 	    } elsif ($feature eq 'ec') {
@@ -504,7 +504,7 @@ sub fetchGenesListRef{
 				JOIN ECInfo ec USING (ecNum)
 				WHERE $locusReq/;
 		my $ecRef = {}; # locusId -> ec -> list, -> ecNum -> list
-		foreach (@{ GenomicsUtils::query($statement) }) {
+		foreach (@{ Bio::KBase::ProteinInfoService::GenomicsUtils::query($statement) }) {
 		    my ($locusId,$ecNum,$name,$evidence) = @$_;
 		    $ecRef->{$locusId} = {'ec'=>[], 'ecNum'=>[]} unless exists $ecRef->{$locusId};
 		    # this odd format is how Gene::ec returns ec values
@@ -517,7 +517,7 @@ sub fetchGenesListRef{
 		$statement = qq/SELECT o.locusId, t.term_type, t.acc, t.name, o.evidence
 		    FROM Locus2Go o, term t WHERE o.$locusReqShort AND o.goId=t.id ORDER BY term_type/;
 		my $goRef = {}; # locusId->list
-		foreach (@{ GenomicsUtils::query($statement) }) {
+		foreach (@{ Bio::KBase::ProteinInfoService::GenomicsUtils::query($statement) }) {
 		    my ($locusId, $type, $acc, $name, $evidence) = @$_;
 		    $type =~ s/molecular_function/[M]/; 
 		    $type =~ s/cellular_component/[C]/;
@@ -533,7 +533,7 @@ sub fetchGenesListRef{
 		                   FROM Locus2Ipr l2i JOIN IPRInfo USING (iprId)
 				   WHERE $locusReqShort/;
 		my $iprRef = {};
-		foreach (@{ GenomicsUtils::query($statement) }) {
+		foreach (@{ Bio::KBase::ProteinInfoService::GenomicsUtils::query($statement) }) {
 		    my ($locusId,$id,$name) = @$_;
 		    $iprRef->{$locusId} = [] unless exists $iprRef->{$locusId};
 		    push @{ $iprRef->{$locusId} }, "$id: $name";
@@ -544,7 +544,7 @@ sub fetchGenesListRef{
 		                   FROM Locus o JOIN COG USING (locusId,version) JOIN COGInfo USING (cogInfoId)
 				   WHERE $locusReq/;
 		my $COGInfoRef = {}; # locusId->[code,desc]
-		foreach (@{ GenomicsUtils::query($statement) }) {
+		foreach (@{ Bio::KBase::ProteinInfoService::GenomicsUtils::query($statement) }) {
 		    my ($locusId,$funCode, $desc) = @$_;
 		    $COGInfoRef->{$locusId} = [$funCode,$desc];
 		}
@@ -624,7 +624,7 @@ sub preloadSynonym(){
 
 # Trying to recreate the statement 
     my $statement = qq/SELECT o.locusId, sy.name, sy.type  FROM Scaffold s, Position p, Locus o LEFT JOIN Synonym sy ON (o.locusId=sy.locusId AND o.version=sy.version) WHERE s.scaffoldId=$scaffoldId AND p.scaffoldId=s.scaffoldId AND o.posId=p.posId  ORDER BY begin, locusId/;
-    my $synonymRef = GenomicsUtils::query( $statement );
+    my $synonymRef = Bio::KBase::ProteinInfoService::GenomicsUtils::query( $statement );
     my $genesRef = $self->genesRef();
     foreach my $g (@$genesRef) {
 	my $synonymHashRef = createSynonymHash( $synonymRef, $g->locusId()  );
@@ -695,7 +695,7 @@ sub genesWithin {
 		       ORDER BY p.begin
 		   };
     my @out = ();
-    foreach my $row (@{ GenomicsUtils::query($query) }) {
+    foreach my $row (@{ Bio::KBase::ProteinInfoService::GenomicsUtils::query($query) }) {
 	my ($begin,$end,$strand,$locusId,$version,$posId,$type,$cog) = @$row;
 	push @out, Bio::KBase::ProteinInfoService::Gene::new(scaffoldId => $scaffoldId,
 			     locusId => $locusId, version => $version,

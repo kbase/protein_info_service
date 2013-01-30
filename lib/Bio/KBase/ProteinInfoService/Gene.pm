@@ -1313,7 +1313,7 @@ sub getOrthologListRef($){
     if (!exists $self->{orthologListRef_}) {
 	my @orthologs = $self->orthologs();
 	if (scalar @orthologs) {
-	    $self->{orthologListRef_} = Scaffold::fetchGenesListRef( locusId => \@orthologs);
+	    $self->{orthologListRef_} = Bio::KBase::ProteinInfoService::Scaffold::fetchGenesListRef( locusId => \@orthologs);
 	} else {
 	    $self->{orthologListRef_} = [];
 	}
@@ -1818,7 +1818,7 @@ sub getOperon{
 						     WHERE o1.locusId=$locusId AND o1.tuId=o2.tuId
 						     GROUP BY o2.locusId } );
     if (scalar @locusIds == 0) { return(); }
-    my %genes = &Scaffold::fetchGenesMap( locusId => [@locusIds] );
+    my %genes = &Bio::KBase::ProteinInfoService::Scaffold::fetchGenesMap( locusId => [@locusIds] );
 
     #return a hash of operons indexed by tuId
     if ((defined $params{map}) && $params{map}){
