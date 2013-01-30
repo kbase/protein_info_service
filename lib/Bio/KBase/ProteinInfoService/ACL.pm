@@ -2,9 +2,9 @@ package ACL;
 require Exporter;
 
 use strict;
-use Browser::DB;
-use Browser::Defaults;
-use Browser::HTML;
+use Bio::KBase::ProteinInfoService::Browser::DB;
+use Bio::KBase::ProteinInfoService::Browser::Defaults;
+use Bio::KBase::ProteinInfoService::Browser::HTML;
 
 use vars '$VERSION';
 use vars qw($defaults $jobStatus);
@@ -60,7 +60,7 @@ sub resourceACLMatrix
 	if ( $resourceType eq 'cart' )
 	{
 		my $query = "SELECT u.userId AS requesterId, u.name FROM genomics_test.Users u LEFT JOIN genomics_test.Carts c ON u.userId = c.userId WHERE c.cartId = '$resourceId' AND c.active = '1'";
-		@entries = Browser::DB::dbSqlResults( $query );
+		@entries = Bio::KBase::ProteinInfoService::Browser::DB::dbSqlResults( $query );
 		if ( scalar(@entries) > 0 )
 		{
 			$entries[0]->{owner} = 1;
@@ -71,7 +71,7 @@ sub resourceACLMatrix
 	} elsif ( $resourceType eq 'job' )
 	{
 		my $query = "SELECT u.userId AS requesterId, u.name FROM genomics_test.Users u LEFT JOIN genomics_test.Jobs j ON u.userId = j.userId WHERE j.jobId = '$resourceId'";
-		@entries = Browser::DB::dbSqlResults( $query );
+		@entries = Bio::KBase::ProteinInfoService::Browser::DB::dbSqlResults( $query );
 		if ( scalar(@entries) > 0 )
 		{
 			$entries[0]->{owner} = 1;
@@ -82,7 +82,7 @@ sub resourceACLMatrix
 #	} elsif ( $resourceType eq 'uarray' )
 #	{
 #		my $query = "SELECT u.userId AS requesterId, u.name FROM Users u LEFT JOIN microarray.Exp m ON u.userId = m.userId WHERE m.id = '$resourceId'";
-#		@entries = Browser::DB::dbSqlResults( $query );
+#		@entries = Bio::KBase::ProteinInfoService::Browser::DB::dbSqlResults( $query );
 #		if ( scalar(@entries) > 0 )
 #		{
 #			$entries[0]->{owner} = 1;
@@ -94,12 +94,12 @@ sub resourceACLMatrix
 
 	# Users
 	my $query = "SELECT u.userId AS requesterId, u.name, a.read, a.write, a.admin FROM genomics_test.ACL a LEFT JOIN genomics_test.Users u ON a.requesterId = u.userId WHERE a.requesterType = 'user' AND resourceId = '$resourceId' AND resourceType = '$resourceType'";
-	my @results = Browser::DB::dbSqlResults( $query );
+	my @results = Bio::KBase::ProteinInfoService::Browser::DB::dbSqlResults( $query );
 	@entries = ( @entries, @results );
 
 	# Groups
 	$query = "SELECT g.groupId AS requesterId, 1 AS isGroup, g.name, a.read, a.write, a.admin FROM genomics_test.ACL a LEFT JOIN genomics_test.Groups g ON a.requesterId = g.groupId WHERE a.requesterType = 'group' AND resourceId = '$resourceId' AND resourceType = '$resourceType' ORDER BY g.groupId";
-	@results = Browser::DB::dbSqlResults( $query );
+	@results = Bio::KBase::ProteinInfoService::Browser::DB::dbSqlResults( $query );
 	@entries = ( @entries, @results );
 
 	return \@entries;
@@ -117,22 +117,22 @@ sub setUserACL
 	if ( ($read+$write+$admin) > 0 )
 	{
 		my $query = "SELECT `read` FROM genomics_test.ACL WHERE requesterId = '$userId' AND requesterType = 'user' AND resourceId = '$resourceId' AND resourceType = '$resourceType'";
-		my @results = Browser::DB::dbSqlResults( $query );
+		my @results = Bio::KBase::ProteinInfoService::Browser::DB::dbSqlResults( $query );
 
 		if ( scalar(@results) > 0 )
 		{
 			# Do an update
 			$query = "UPDATE genomics_test.ACL SET `read` = '$read', `write` = '$write', admin = '$admin' WHERE requesterId = '$userId' AND requesterType = 'user' AND resourceId = '$resourceId' AND resourceType = '$resourceType' LIMIT 1";
-			Browser::DB::dbSql( $query );
+			Bio::KBase::ProteinInfoService::Browser::DB::dbSql( $query );
 		} else {
 			# Do an insert
 			$query = "INSERT INTO genomics_test.ACL (requesterId, requesterType, resourceId, resourceType, `read`, `write`, admin) VALUES ('$userId', 'user', '$resourceId', '$resourceType', '$read', '$write', '$admin')";
-			Browser::DB::dbSql( $query );
+			Bio::KBase::ProteinInfoService::Browser::DB::dbSql( $query );
 		}
 	} else {
 		# remove ACL entry
 		my $query = "DELETE FROM genomics_test.ACL WHERE requesterId = '$userId' AND requesterType = 'user' AND resourceId = '$resourceId' AND resourceType = '$resourceType'";
-		Browser::DB::dbSql( $query );
+		Bio::KBase::ProteinInfoService::Browser::DB::dbSql( $query );
 	}
 }
 
@@ -148,22 +148,22 @@ sub setGroupACL
 	if ( ($read+$write+$admin) > 0 )
 	{
 		my $query = "SELECT `read` FROM genomics_test.ACL WHERE requesterId = '$groupId' AND requesterType = 'group' AND resourceId = '$resourceId' AND resourceType = '$resourceType'";
-		my @results = Browser::DB::dbSqlResults( $query );
+		my @results = Bio::KBase::ProteinInfoService::Browser::DB::dbSqlResults( $query );
 
 		if ( scalar(@results) > 0 )
 		{
 			# Do an update
 			$query = "UPDATE genomics_test.ACL SET `read` = '$read', `write` = '$write', admin = '$admin' WHERE requesterId = '$groupId' AND requesterType = 'group' AND resourceId = '$resourceId' AND resourceType = '$resourceType' LIMIT 1";
-			Browser::DB::dbSql( $query );
+			Bio::KBase::ProteinInfoService::Browser::DB::dbSql( $query );
 		} else {
 			# Do an insert
 			$query = "INSERT INTO genomics_test.ACL (requesterId, requesterType, resourceId, resourceType, `read`, `write`, admin) VALUES ('$groupId', 'group', '$resourceId', '$resourceType', '$read', '$write', '$admin')";
-			Browser::DB::dbSql( $query );
+			Bio::KBase::ProteinInfoService::Browser::DB::dbSql( $query );
 		}
 	} else {
 		# remove ACL entry
 		my $query = "DELETE FROM genomics_test.ACL WHERE requesterId = '$groupId' AND requesterType = 'group' AND resourceId = '$resourceId' AND resourceType = '$resourceType'";
-		Browser::DB::dbSql( $query );
+		Bio::KBase::ProteinInfoService::Browser::DB::dbSql( $query );
 	}
 }
 
@@ -185,10 +185,10 @@ sub groupsResources
 	my $inGroups = "('" . join("','", @_) . "')";
 
 	my $query = "SELECT a.resourceId, a.resourceType, c.name, u.name AS sharedBy, CONCAT('Group: ', g.name) AS sharedTo, a.read, a.write, a.admin FROM genomics_test.ACL a LEFT JOIN genomics_test.Carts c ON (a.resourceId = c.cartId) LEFT JOIN genomics_test.Users u ON (c.userId = u.userId) LEFT JOIN genomics_test.Groups g ON (a.requesterId = g.groupId) WHERE a.requesterId IN $inGroups AND a.requesterType = 'group' AND a.resourceType = 'cart' AND c.active = 1";
-	my @resources = Browser::DB::dbSqlResults( $query );
+	my @resources = Bio::KBase::ProteinInfoService::Browser::DB::dbSqlResults( $query );
 
 	$query = "SELECT a.resourceId, a.resourceType, j.jobName, j.jobType, u.name AS sharedBy, CONCAT('Group: ', g.name) AS sharedTo, a.read, a.write, a.admin FROM genomics_test.ACL a LEFT JOIN genomics_test.Jobs j ON (a.resourceId = j.jobId) LEFT JOIN genomics_test.Users u ON (j.userId = u.userId) LEFT JOIN genomics_test.Groups g ON (a.requesterId = g.groupId) WHERE a.requesterId IN $inGroups AND a.requesterType = 'group' AND a.resourceType = 'job' AND j.status = '$jobStatus->{DONE}'";
-	my @results = Browser::DB::dbSqlResults( $query );
+	my @results = Bio::KBase::ProteinInfoService::Browser::DB::dbSqlResults( $query );
 	@resources = ( @resources, @results );
 
 	return \@resources;
@@ -199,10 +199,10 @@ sub userResources
 	my $userId = shift;
 
 	my $query = "SELECT a.resourceId, a.resourceType, c.name, u.name AS sharedBy, u2.name AS sharedTo, a.read, a.write, a.admin FROM genomics_test.ACL a LEFT JOIN genomics_test.Carts c ON (a.resourceId = c.cartId) LEFT JOIN genomics_test.Users u ON (c.userId = u.userId) LEFT JOIN genomics_test.Users u2 ON (a.requesterId = u2.userId) WHERE a.requesterId = '$userId' AND a.requesterType = 'user' AND a.resourceType = 'cart' AND c.active = 1";
-	my @resources = Browser::DB::dbSqlResults( $query );
+	my @resources = Bio::KBase::ProteinInfoService::Browser::DB::dbSqlResults( $query );
 
 	$query = "SELECT a.resourceId, a.resourceType, j.jobName, j.jobType, u.name AS sharedBy, u2.name AS sharedTo, a.read, a.write, a.admin FROM genomics_test.ACL a LEFT JOIN genomics_test.Jobs j ON (a.resourceId = j.jobId) LEFT JOIN genomics_test.Users u ON (j.userId = u.userId) LEFT JOIN genomics_test.Users u2 ON (a.requesterId = u2.userId) WHERE a.requesterId = '$userId' AND a.requesterType = 'user' AND a.resourceType = 'job' AND j.status = '$jobStatus->{DONE}'";
-	my @results = Browser::DB::dbSqlResults( $query );
+	my @results = Bio::KBase::ProteinInfoService::Browser::DB::dbSqlResults( $query );
 	@resources = ( @resources, @results );
 
 	return \@resources;
@@ -215,11 +215,11 @@ sub userShares
 
 	# Carts
 	my $query = "SELECT a.requesterId, a.requesterType, a.resourceId, a.resourceType, c.name, a.read, a.write, a.admin FROM genomics_test.Carts c JOIN genomics_test.ACL a ON a.resourceId = c.cartId WHERE a.resourceType = 'cart' AND c.userId = '$userId' AND c.active = '1' GROUP BY a.resourceId";
-	@shares = Browser::DB::dbSqlResults( $query );
+	@shares = Bio::KBase::ProteinInfoService::Browser::DB::dbSqlResults( $query );
 
 	# Jobs
 	$query = "SELECT a.requesterId, a.requesterType, a.resourceId, a.resourceType, j.jobName, j.jobType, a.read, a.write, a.admin FROM genomics_test.Jobs j JOIN genomics_test.ACL a ON a.resourceId = j.jobId WHERE a.resourceType = 'job' AND j.userId = '$userId' GROUP BY a.resourceId";
-	my @results = Browser::DB::dbSqlResults( $query );
+	my @results = Bio::KBase::ProteinInfoService::Browser::DB::dbSqlResults( $query );
 
 	@shares = ( @shares, @results );
 	return \@shares;
@@ -276,19 +276,19 @@ sub resourceListRead
                         OR (requesterType = 'group' AND requesterId IN $userGroupsVals)
                 ) AND ACL.read = 1";
 
-        my @results = Browser::DB::dbSqlResults( $query );
+        my @results = Bio::KBase::ProteinInfoService::Browser::DB::dbSqlResults( $query );
 	my %readable = map {$_->{resourceId} => 1} @results;
 
 	# now check for owners, for jobs or carts
 	if ($resourceType eq "job") {
-	    my @owned = Browser::DB::dbSqlResults("SELECT jobId FROM genomics_test.Jobs"
+	    my @owned = Bio::KBase::ProteinInfoService::Browser::DB::dbSqlResults("SELECT jobId FROM genomics_test.Jobs"
 						  . " WHERE userId=$userId"
 						  . " AND jobId IN $resourceIdVals");
 	    foreach my $row (@owned) {
 		$readable{$row->{jobId}} = 1;
 	    }
 	} elsif ($resourceType eq "cart") {
-	    my @owned = Browser::DB::dbSqlResults("SELECT cartId FROM genomics_test.Carts"
+	    my @owned = Bio::KBase::ProteinInfoService::Browser::DB::dbSqlResults("SELECT cartId FROM genomics_test.Carts"
 						  . " WHERE userId=$userId"
 						  . " AND cartId IN $resourceIdVals");
 	    foreach my $row (@owned) {
@@ -312,7 +312,7 @@ sub resourceRead
 	my $userGroupsVals = "('" . join("','", @{$userGroupsRef}) . "')";
 
 	my $query = "SELECT ACL.read FROM genomics_test.ACL WHERE resourceId = '$resourceId' AND resourceType = '$resourceType' AND ((requesterType = 'user' AND requesterId = '$userId') OR (requesterType = 'group' AND requesterId IN $userGroupsVals)) AND ACL.read = '1'";
-	my @results = Browser::DB::dbSqlResults( $query );
+	my @results = Bio::KBase::ProteinInfoService::Browser::DB::dbSqlResults( $query );
 	return ( scalar(@results) > 0 );
 }
 
@@ -330,7 +330,7 @@ sub taxListFilterReadable
 	my $userGroupVals = "('" . join("','", @{$userGroups},1) . "')";
 
 	my $query = "SELECT DISTINCT(s.taxonomyId) FROM genomics_test.Scaffold s JOIN genomics_test.ACL a ON (s.scaffoldId = a.resourceId AND a.resourceType = 'scaffold') WHERE s.taxonomyId IN $taxIdVals AND s.isActive = 1 AND ( (a.requesterType = 'group' AND a.requesterId IN $userGroupVals) OR (a.requesterType = 'user' AND a.requesterId = '$userId') ) AND a.read = 1";
-	my @results = Browser::DB::dbSqlResults( $query );
+	my @results = Bio::KBase::ProteinInfoService::Browser::DB::dbSqlResults( $query );
 	my @taxIds = ();
 
 	foreach my $r ( @results )
@@ -354,7 +354,7 @@ sub taxReadable { # returns a hash of taxonomyId -> [ #scaffolds ]
 		       AND a.resourceId=s.scaffoldId
 		       AND s.isActive=1
 		       GROUP BY s.taxonomyId};
-    return Browser::DB::dbSqlResults($query, 'hashList');
+    return Bio::KBase::ProteinInfoService::Browser::DB::dbSqlResults($query, 'hashList');
 }
 			    
 sub taxReadableByTaxId { # returns a hash of taxonomyId -> 1; not sure if
@@ -370,7 +370,7 @@ sub taxReadableByTaxId { # returns a hash of taxonomyId -> 1; not sure if
 			    OR (a.requesterType='user' AND a.requesterId='$userId'))
 		       AND a.read='1'
 		       ORDER BY resourceId};
-    return Browser::DB::dbSqlResults($query, 'hashList');
+    return Bio::KBase::ProteinInfoService::Browser::DB::dbSqlResults($query, 'hashList');
 }
 			    
 sub resourceWrite
@@ -385,7 +385,7 @@ sub resourceWrite
 	my $userGroupsVals = "('" . join("','", @{$userGroupsRef}) . "')";
 
 	my $query = "SELECT ACL.write FROM genomics_test.ACL WHERE resourceId = '$resourceId' AND resourceType = '$resourceType' AND ((requesterType = 'user' AND requesterId = '$userId') OR (requesterType = 'group' AND requesterId IN $userGroupsVals)) AND ACL.write = '1'";
-	my @results = Browser::DB::dbSqlResults( $query );
+	my @results = Bio::KBase::ProteinInfoService::Browser::DB::dbSqlResults( $query );
 	return ( scalar(@results) > 0 );
 }
 
@@ -401,7 +401,7 @@ sub resourceAdmin
 	my $userGroupsVals = "('" . join("','", @{$userGroupsRef}) . "')";
 
 	my $query = "SELECT ACL.admin FROM genomics_test.ACL WHERE resourceId = '$resourceId' AND resourceType = '$resourceType' AND ((requesterType = 'user' AND requesterId = '$userId') OR (requesterType = 'group' AND requesterId IN $userGroupsVals)) AND ACL.admin = '1'";
-	my @results = Browser::DB::dbSqlResults( $query );
+	my @results = Bio::KBase::ProteinInfoService::Browser::DB::dbSqlResults( $query );
 	return ( scalar(@results) > 0 );
 }
 
@@ -411,7 +411,7 @@ sub userGroupsDetail
 
 	# userId 0 is a wildcard for all users (such as for use in public groups)
 	my $query = "SELECT g.groupId, g.name, g.description, g.adminUserId FROM genomics_test.GroupUsers gu LEFT JOIN genomics_test.Groups g ON (gu.groupId = g.groupId) WHERE (gu.userId = '$userId' OR gu.userId = '0') AND gu.active = '1' GROUP BY g.groupId";
-	my @results = Browser::DB::dbSqlResults( $query );
+	my @results = Bio::KBase::ProteinInfoService::Browser::DB::dbSqlResults( $query );
 
 	return \@results;
 }
@@ -422,7 +422,7 @@ sub userGroups
 
 	# userId 0 is a wildcard for all users (such as for use in public groups)
 	my $query = "SELECT DISTINCT(groupId) AS groupId FROM genomics_test.GroupUsers WHERE (userId = '$userId' OR userId = '0' OR groupId=1) AND active = '1'";
-	my @results = Browser::DB::dbSqlResults( $query );
+	my @results = Bio::KBase::ProteinInfoService::Browser::DB::dbSqlResults( $query );
 	my @groupIds = ();
 	foreach my $r ( @results )
 	{
@@ -438,7 +438,7 @@ sub isGroupMember
 
 	# userId 0 is a wildcard for all users (such as for use in public groups)
 	my $query = "SELECT groupId FROM genomics_test.GroupUsers WHERE groupId = '$groupId' AND (userId = '$userId' OR userId = '0') AND active = '1' LIMIT 1";
-	my @results = Browser::DB::dbSqlResults( $query );
+	my @results = Bio::KBase::ProteinInfoService::Browser::DB::dbSqlResults( $query );
 	return ( (scalar(@results) > 0) && ($results[0]->{groupId} eq $groupId) );
 }
 
@@ -469,7 +469,7 @@ sub isuArrayOwner
 	my $userId = shift;
 
 	my $query = "SELECT id FROM microarray.Exp WHERE id = '$microarrayId' AND userId = '$userId' LIMIT 1";
-	my @results = Browser::DB::dbSqlResults( $query );
+	my @results = Bio::KBase::ProteinInfoService::Browser::DB::dbSqlResults( $query );
 	return ( (scalar(@results) > 0) && ($results[0]->{microarrayId} eq $microarrayId) );
 }
 
@@ -480,7 +480,7 @@ sub isSysAdmin
 	# nothing but digits prevents sql injection
 	$userId =~ s/\D+//g;
 	my $query = "SELECT userId FROM genomics_test.Users WHERE userId = '$userId' AND isSysAdmin = 1 LIMIT 1";
-	my @results = Browser::DB::dbSqlResults( $query );
+	my @results = Bio::KBase::ProteinInfoService::Browser::DB::dbSqlResults( $query );
 	return ( scalar(@results) > 0 );
 }
 
@@ -490,7 +490,7 @@ sub isCartOwner
 	my $userId = shift;
 
 	my $query = "SELECT cartId FROM genomics_test.Carts WHERE cartId = '$cartId' AND userId = '$userId' AND active = '1' LIMIT 1";
-	my @results = Browser::DB::dbSqlResults( $query );
+	my @results = Bio::KBase::ProteinInfoService::Browser::DB::dbSqlResults( $query );
 	return ( (scalar(@results) > 0) && ($results[0]->{cartId} eq $cartId) );
 }
 
@@ -500,7 +500,7 @@ sub isJobOwner
 	my $userId = shift;
 
 	my $query = "SELECT jobId FROM genomics_test.Jobs WHERE jobId = '$jobId' AND userId = '$userId' LIMIT 1";
-	my @results = Browser::DB::dbSqlResults( $query );
+	my @results = Bio::KBase::ProteinInfoService::Browser::DB::dbSqlResults( $query );
 	return ( (scalar(@results) > 0) && ($results[0]->{jobId} eq $jobId) );
 }
 
@@ -511,13 +511,13 @@ sub cartsForGene
     my $locusId = shift;
     my $userId = shift;
 
-    my @relCarts = map {$_->{cartId}} Browser::DB::dbSqlResults("SELECT cartId FROM genomics_test.Carts"
+    my @relCarts = map {$_->{cartId}} Bio::KBase::ProteinInfoService::Browser::DB::dbSqlResults("SELECT cartId FROM genomics_test.Carts"
 								. " WHERE seqData LIKE '%".$locusId."%'");
     return () if @relCarts==0;
     @relCarts = resourceListRead($userId,'cart',@relCarts);
     return () if @relCarts == 0;
 
-    my @carts = Browser::DB::dbSqlResults("SELECT cartId,seqData FROM genomics_test.Carts"
+    my @carts = Bio::KBase::ProteinInfoService::Browser::DB::dbSqlResults("SELECT cartId,seqData FROM genomics_test.Carts"
 					  . " WHERE cartId IN (".join(",",@relCarts).")"
 					  . " order by cartId");
     @relCarts = ();
