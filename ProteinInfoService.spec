@@ -21,6 +21,12 @@ module ProteinInfo {
 	*/
 	typedef string domain_id;
 
+
+	/*
+	A neighbor_threshold is a floating point number indicating a bound
+	for the neighbor score */
+	typedef float neighbor_threshold;
+
 	/*
 	Domains are a list of domain_ids.
 	*/
@@ -106,5 +112,11 @@ module ProteinInfo {
 	a mapping of each fid to its Gene Ontology assignments (GO).
 	*/
 	funcdef fids_to_go (list<fid> fids) returns (mapping<fid,go>);
+
+	/*
+	fids_to_neighbords takes as input a list of feature ids, and
+	returns a mapping of each fid to its neighbors, based on a
+	neighbor scoring */
+	funcdef fids_to_neighbords(list<fid> fids, neighbor_threshold) returns (mapping<fid, list<fid>>);
 
 };
