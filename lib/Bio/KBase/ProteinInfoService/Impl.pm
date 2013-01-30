@@ -1,7 +1,6 @@
 package Bio::KBase::ProteinInfoService::Impl;
 use strict;
 use Bio::KBase::Exceptions;
-use Bio::KBase::ProteinInfoService::Gene;
 # Use Semantic Versioning (2.0.0-rc.1)
 # http://semver.org 
 our $VERSION = "0.1.0";
@@ -1095,6 +1094,168 @@ sub fids_to_go
 
 
 
+=head2 fid_to_neighbors
+
+  $return = $obj->fid_to_neighbors($id, $thresh)
+
+=over 4
+
+=item Parameter and return types
+
+=begin html
+
+<pre>
+$id is a fid
+$thresh is a neighbor_threshold
+$return is a reference to a list where each element is a neighbor
+fid is a string
+neighbor_threshold is a float
+neighbor is a reference to a list containing 2 items:
+	0: a fid
+	1: a float
+
+</pre>
+
+=end html
+
+=begin text
+
+$id is a fid
+$thresh is a neighbor_threshold
+$return is a reference to a list where each element is a neighbor
+fid is a string
+neighbor_threshold is a float
+neighbor is a reference to a list containing 2 items:
+	0: a fid
+	1: a float
+
+
+=end text
+
+
+
+=item Description
+
+fid_to_neighbor takes as input a single feature id, and
+a neighhbor score threshold and returns a list of neighbors
+where neighbor score >= threshold
+
+=back
+
+=cut
+
+sub fid_to_neighbors
+{
+    my $self = shift;
+    my($id, $thresh) = @_;
+
+    my @_bad_arguments;
+    (!ref($id)) or push(@_bad_arguments, "Invalid type for argument \"id\" (value was \"$id\")");
+    (!ref($thresh)) or push(@_bad_arguments, "Invalid type for argument \"thresh\" (value was \"$thresh\")");
+    if (@_bad_arguments) {
+	my $msg = "Invalid arguments passed to fid_to_neighbors:\n" . join("", map { "\t$_\n" } @_bad_arguments);
+	Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
+							       method_name => 'fid_to_neighbors');
+    }
+
+    my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
+    my($return);
+    #BEGIN fid_to_neighbors
+    #END fid_to_neighbors
+    my @_bad_returns;
+    (ref($return) eq 'ARRAY') or push(@_bad_returns, "Invalid type for return variable \"return\" (value was \"$return\")");
+    if (@_bad_returns) {
+	my $msg = "Invalid returns passed to fid_to_neighbors:\n" . join("", map { "\t$_\n" } @_bad_returns);
+	Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
+							       method_name => 'fid_to_neighbors');
+    }
+    return($return);
+}
+
+
+
+
+=head2 fids_to_neighbors
+
+  $return = $obj->fids_to_neighbors($fids, $thresh)
+
+=over 4
+
+=item Parameter and return types
+
+=begin html
+
+<pre>
+$fids is a reference to a list where each element is a fid
+$thresh is a neighbor_threshold
+$return is a reference to a hash where the key is a fid and the value is a reference to a list where each element is a neighbor
+fid is a string
+neighbor_threshold is a float
+neighbor is a reference to a list containing 2 items:
+	0: a fid
+	1: a float
+
+</pre>
+
+=end html
+
+=begin text
+
+$fids is a reference to a list where each element is a fid
+$thresh is a neighbor_threshold
+$return is a reference to a hash where the key is a fid and the value is a reference to a list where each element is a neighbor
+fid is a string
+neighbor_threshold is a float
+neighbor is a reference to a list containing 2 items:
+	0: a fid
+	1: a float
+
+
+=end text
+
+
+
+=item Description
+
+fids_to_neighbors takes as input a list of feature ids, and
+a minimal neighbor score, and returns a mapping of each fid to
+its neighbors, based on neighbor score >= threshold
+
+=back
+
+=cut
+
+sub fids_to_neighbors
+{
+    my $self = shift;
+    my($fids, $thresh) = @_;
+
+    my @_bad_arguments;
+    (ref($fids) eq 'ARRAY') or push(@_bad_arguments, "Invalid type for argument \"fids\" (value was \"$fids\")");
+    (!ref($thresh)) or push(@_bad_arguments, "Invalid type for argument \"thresh\" (value was \"$thresh\")");
+    if (@_bad_arguments) {
+	my $msg = "Invalid arguments passed to fids_to_neighbors:\n" . join("", map { "\t$_\n" } @_bad_arguments);
+	Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
+							       method_name => 'fids_to_neighbors');
+    }
+
+    my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
+    my($return);
+    #BEGIN fids_to_neighbors
+    #END fids_to_neighbors
+    my @_bad_returns;
+    (ref($return) eq 'HASH') or push(@_bad_returns, "Invalid type for return variable \"return\" (value was \"$return\")");
+    if (@_bad_returns) {
+	my $msg = "Invalid returns passed to fids_to_neighbors:\n" . join("", map { "\t$_\n" } @_bad_returns);
+	Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
+							       method_name => 'fids_to_neighbors');
+    }
+    return($return);
+}
+
+
+
+
 =head2 version 
 
   $return = $obj->version()
@@ -1193,6 +1354,75 @@ a string
 =begin text
 
 a string
+
+=end text
+
+=back
+
+
+
+=head2 neighbor_threshold
+
+=over 4
+
+
+
+=item Description
+
+A neighbor_threshold is a floating point number indicating a bound
+for the neighbor score
+
+
+=item Definition
+
+=begin html
+
+<pre>
+a float
+</pre>
+
+=end html
+
+=begin text
+
+a float
+
+=end text
+
+=back
+
+
+
+=head2 neighbor
+
+=over 4
+
+
+
+=item Description
+
+Neighbor is a tuple of fid and a neighbor score
+
+
+=item Definition
+
+=begin html
+
+<pre>
+a reference to a list containing 2 items:
+0: a fid
+1: a float
+
+</pre>
+
+=end html
+
+=begin text
+
+a reference to a list containing 2 items:
+0: a fid
+1: a float
+
 
 =end text
 
