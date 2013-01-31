@@ -73,7 +73,7 @@ sub new
 	$self->{kbCDM}=$kbCDM;
 	$self->{kbMOT}=$kbMOT;
 	$self->{moDbh}=$moDbh;
-        $self->{gene_dbh} = $gene_dbh;
+        $self->{moDbh_dev} = $moDbh_dev;
     #END_CONSTRUCTOR
 
     if ($self->can('_init_instance'))
@@ -861,13 +861,10 @@ sub fids_to_orthologs_local
 
 	my $fids2externalIds=$kbMOT->fids_to_moLocusIds($fids);
 
-	# this is not the best way, but should work
-	foreach my $fid (keys %$fids2externalIds)
-	{
-		#my $response=$ua->post("http://www.microbesonline.org/cgi-bin/getOrthologs",Content=>{locusId=>$fids2externalIds->{$fid}[0]});
-		#my $json=from_json($response->content);
-    	        my $gene = Bio::KBase::ProteinInfoService::Gene::new( locusId => $fids2externalIds->{$fid}[0]);
-		# my $moOrthologs=$json->{$fids2externalIds->{$fid}[0]};
+	foreach my $fid (keys %$fids2externalIds) {
+	    # run the orthologs query for every locusId that was returned for the fid
+	    foreach my $locusId ( @{$fids2externalIds->{$fid}}) {
+    	        my $gene = Bio::KBase::ProteinInfoService::Gene::new( locusId => $locusId);
 		my $moOrthologList = $gene->getOrthologListRef();
 		my @moOrthologArray = map { $_->{'locusId_'} } @$moOrthologList;
 		my $moOrthologs = \@moOrthologArray;
@@ -881,10 +878,10 @@ sub fids_to_orthologs_local
 			{
 				$kbOrthologs{$orthFid}=1;
 			}
-#			push @{$return->{$fid}},@{$moOrthologs2fids->{$moOrthLocusId}};
 		}
 		my @kbOrthologs=keys %kbOrthologs;
 		$return->{$fid} = \@kbOrthologs;
+	    }
 	}
 
     #END fids_to_orthologs_local
@@ -1257,23 +1254,27 @@ sub fidlist_to_neighbors
     my($return);
     #BEGIN fidlist_to_neighbors
     my $kbMOT=$self->{kbMOT};
-    
+    my $dbh =$self->{moDbh_dev};
+    my $kbCDM =$self->{kbCDM};
     my $fid2locus=$kbMOT->fids_to_moLocusIds($fids);
+    my $fid2genome = $kbCDM->fids_to_genomes( $fids);
 
-    foreach $locusId ( values %$fid2locus) {
-	$return = [];
-	my $get_mogId= $dbh->prepare( q{ select mogId from MOGMember where locusId = ? } );
-	my $neighbor1_sql = $dbh->prepare( q{ select m.locusId, n.score from MOGMember m, MOGNeighborScores n where n.mog2 = ? and n.score >= ? and n.mog1 = m.mogId });
-	my $neighbor2_sql = $dbh->prepare( q{ select m.locusId, n.score from MOGMember m, MOGNeighborScores n where n.mog1 = ? and n.score >= ? and n.mog2 = m.mogId });
-
-	my $mogIds = $dbh->selectall_arrayref( $get_modId, {}, ($locusId));
-	foreach $mogId ( @$mogIds) {
-	    my $n1 = $dbh->selectall_arrayref( $neighbor1_sql, {}, ($mogId, $thresh));
-	    my $n2 = $dbh->selectall_arrayref( $neighbor2_sql, {}, ($mogId, $thresh));
+    my $neighbor1_sql = $dbh->prepare( q{ select m.locusId, n.score from MOGMember m, MOGNeighborScores n where n.mog2 = ? and n.score >= ? and n.mog1 = m.mogId and m.taxnomyId = ? });
+    my $neighbor2_sql = $dbh->prepare( q{ select m.locusId, n.score from MOGMember m, MOGNeighborScores n where n.mog1 = ? and n.score >= ? and n.mog2 = m.mogId and m.taxnomyId = ? });
+    $return = [];
+    my $neighbors = {};
+    foreach my $fid ( keys %$fid2locus) {
+	my $whats = join( ",", map { "?" } @{$fid2locus->{$fid}});
+	my $get_mogId= $dbh->prepare( sprintf "select mogId, taxonomyId from MOGMember where locusId in ( %s )", $whats );
+	my $mogIds = $dbh->selectall_arrayref( $get_mogId, {}, @{$fid2locus->{$fid}});
+	foreach my $mogId ( @$mogIds) {
+	    my $n1 = $dbh->selectall_arrayref( $neighbor1_sql, {}, ($mogId->[0], $thresh,$mogId->[1]));
+	    my $n2 = $dbh->selectall_arrayref( $neighbor2_sql, {}, ($mogId->[0], $thresh,$mogId->[1]));
 	    # Grab the locusIds of all the neighbors and translate them into fids
-	    my @locusIds = map { $_[0] } ( @n1, @n2);
+	    my @locusIds = map { $_[0] } ( @$n1, @$n2);
 	    my $locus2fids = $kbMOT->moLocusIds_to_fids(\@locusIds);
-	    foreach $neighbor ( @n1, @n2) {
+	    # only return the table where the neighbor genome matches $fid genome
+	    foreach my $neighbor ( @$n1, @$n2) {
 		push @$return, [ $locus2fids->{$neighbor->[0]}, $neighbor->[1]];
 	    }
 	}
