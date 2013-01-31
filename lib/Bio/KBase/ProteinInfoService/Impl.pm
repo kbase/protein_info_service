@@ -64,6 +64,10 @@ sub new
 	my $sock='';
 	my $dbKernel = DBKernel->new($dbms, $dbName, $user, $pass, $port, $dbhost, $sock);
 	my $moDbh=$dbKernel->{_dbh};
+        # we currently have 2 databases in play, this is a connection to the test database
+        # on Keith's dev instance
+        my $dbKernel_dev = DBKernel->new($dbms, "genomics_dev", "genomics", undef, $port, "140.221.84.194", $sock);
+        my $moDbh_dev=$dbKernel_dev->{_dbh};
 
 #	$self->{kbIdServer}=$kbIdServer;
 	$self->{kbCDM}=$kbCDM;
@@ -1146,7 +1150,7 @@ neighbor is a reference to a list containing 2 items:
 =item Description
 
 fid_to_neighbor takes as input a single feature id, and
-a neighhbor score threshold and returns a list of neighbors
+a neighbor score threshold and returns a list of neighbors
 where neighbor score >= threshold
 
 =back
@@ -1178,15 +1182,16 @@ sub fid_to_neighbors
 	Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
 							       method_name => 'fid_to_neighbors');
     }
+
     return($return);
 }
 
 
 
 
-=head2 fids_to_neighbors
+=head2 fidlist_to_neighbors
 
-  $return = $obj->fids_to_neighbors($fids, $thresh)
+  $return = $obj->fidlist_to_neighbors($fids, $thresh)
 
 =over 4
 
@@ -1226,7 +1231,7 @@ neighbor is a reference to a list containing 2 items:
 
 =item Description
 
-fids_to_neighbors takes as input a list of feature ids, and
+fidlist_to_neighbors takes as input a list of feature ids, and
 a minimal neighbor score, and returns a mapping of each fid to
 its neighbors, based on neighbor score >= threshold
 
@@ -1234,7 +1239,7 @@ its neighbors, based on neighbor score >= threshold
 
 =cut
 
-sub fids_to_neighbors
+sub fidlist_to_neighbors
 {
     my $self = shift;
     my($fids, $thresh) = @_;
@@ -1243,21 +1248,43 @@ sub fids_to_neighbors
     (ref($fids) eq 'ARRAY') or push(@_bad_arguments, "Invalid type for argument \"fids\" (value was \"$fids\")");
     (!ref($thresh)) or push(@_bad_arguments, "Invalid type for argument \"thresh\" (value was \"$thresh\")");
     if (@_bad_arguments) {
-	my $msg = "Invalid arguments passed to fids_to_neighbors:\n" . join("", map { "\t$_\n" } @_bad_arguments);
+	my $msg = "Invalid arguments passed to fidlist_to_neighbors:\n" . join("", map { "\t$_\n" } @_bad_arguments);
 	Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
-							       method_name => 'fids_to_neighbors');
+							       method_name => 'fidlist_to_neighbors');
     }
 
     my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
     my($return);
-    #BEGIN fids_to_neighbors
-    #END fids_to_neighbors
+    #BEGIN fidlist_to_neighbors
+    my $kbMOT=$self->{kbMOT};
+    
+    my $fid2locus=$kbMOT->fids_to_moLocusIds($fids);
+
+    foreach $locusId ( values %$fid2locus) {
+	$return = [];
+	my $get_mogId= $dbh->prepare( q{ select mogId from MOGMember where locusId = ? } );
+	my $neighbor1_sql = $dbh->prepare( q{ select m.locusId, n.score from MOGMember m, MOGNeighborScores n where n.mog2 = ? and n.score >= ? and n.mog1 = m.mogId });
+	my $neighbor2_sql = $dbh->prepare( q{ select m.locusId, n.score from MOGMember m, MOGNeighborScores n where n.mog1 = ? and n.score >= ? and n.mog2 = m.mogId });
+
+	my $mogIds = $dbh->selectall_arrayref( $get_modId, {}, ($locusId));
+	foreach $mogId ( @$mogIds) {
+	    my $n1 = $dbh->selectall_arrayref( $neighbor1_sql, {}, ($mogId, $thresh));
+	    my $n2 = $dbh->selectall_arrayref( $neighbor2_sql, {}, ($mogId, $thresh));
+	    # Grab the locusIds of all the neighbors and translate them into fids
+	    my @locusIds = map { $_[0] } ( @n1, @n2);
+	    my $locus2fids = $kbMOT->moLocusIds_to_fids(\@locusIds);
+	    foreach $neighbor ( @n1, @n2) {
+		push @$return, [ $locus2fids->{$neighbor->[0]}, $neighbor->[1]];
+	    }
+	}
+    }
+    #END fidlist_to_neighbors
     my @_bad_returns;
     (ref($return) eq 'HASH') or push(@_bad_returns, "Invalid type for return variable \"return\" (value was \"$return\")");
     if (@_bad_returns) {
-	my $msg = "Invalid returns passed to fids_to_neighbors:\n" . join("", map { "\t$_\n" } @_bad_returns);
+	my $msg = "Invalid returns passed to fidlist_to_neighbors:\n" . join("", map { "\t$_\n" } @_bad_returns);
 	Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
-							       method_name => 'fids_to_neighbors');
+							       method_name => 'fidlist_to_neighbors');
     }
     return($return);
 }
