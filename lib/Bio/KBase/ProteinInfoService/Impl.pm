@@ -26,6 +26,11 @@ use Bio::KBase;
 use Bio::KBase::MOTranslationService::Client;
 use DBKernel;
 
+# This use statement drags in a whole boatload of MO stuff along with
+# it - will need to be pruned down
+# sychan 1/30/2013
+use Bio::KBase::ProteinInfoService::Gene;
+
 #use ContextAdapter;
 
 #END_HEADER
@@ -42,27 +47,40 @@ sub new
 #	my $kbIdServer = $kb->id_server();
 	my $kbCDM = $kb->central_store;
 	# this is the production instance
-	my $kbMOT = Bio::KBase::MOTranslationService::Client->new('http://kbase.us/services/translation');
+	#my $kbMOT = Bio::KBase::MOTranslationService::Client->new('http://kbase.us/services/translation');
 	# this is a test instance
-#	my $kbMOT = Bio::KBase::MOTranslationService::Client->new('http://10.0.8.147/services/translation');
+	my $kbMOT = Bio::KBase::MOTranslationService::Client->new('http://140.221.92.231/services/translation');
 #	my $moDbh=DBI->connect("DBI:mysql:genomics:db1.chicago.kbase.us",'genomics');
 
-        my $gene = Bio::KBase::ProteinInfoService::Gene->new();
+        # Need to initialize the database handler for that Bio::KBase::ProteinInfoService::Gene depends on
+        # the GenomicsUtils module caches the database handle internally
 	my $dbms='mysql';
-	my $dbName='guest';
+	my $dbName='genomics';
 	my $user='guest';
-	my $pass=undef;
+	my $pass='guest';
 	my $port=3306;
 	my $dbhost='db1.chicago.kbase.us';
 	my $sock='';
 	my $dbKernel = DBKernel->new($dbms, $dbName, $user, $pass, $port, $dbhost, $sock);
 	my $moDbh=$dbKernel->{_dbh};
+        # we currently have 2 databases in play, this is a connection to the test database
+        # on Keith's dev instance
+	my $dbms_dev='mysql';
+	my $dbName_dev='genomics_dev';
+	my $user_dev='genomics';
+	my $pass_dev=undef;
+	my $port_dev=3306;
+	my $dbhost_dev='140.221.84.194';
+	my $sock_dev='';
+        my $dbKernel_dev = DBKernel->new($dbms_dev, $dbName_dev, $user_dev, $pass_dev, $port_dev, $dbhost_dev, $sock_dev);
+        my $moDbh_dev=$dbKernel_dev->{_dbh};
+        my $gene_dbh = Bio::KBase::ProteinInfoService::Browser::DB::dbConnect($dbhost_dev,$user_dev,$pass_dev,$dbName_dev);
 
 #	$self->{kbIdServer}=$kbIdServer;
 	$self->{kbCDM}=$kbCDM;
 	$self->{kbMOT}=$kbMOT;
 	$self->{moDbh}=$moDbh;
-        $self->{gene} = $gene
+        $self->{moDbh_dev} = $moDbh_dev;
     #END_CONSTRUCTOR
 
     if ($self->can('_init_instance'))
@@ -201,133 +219,6 @@ sub fids_to_operons
 	my $msg = "Invalid returns passed to fids_to_operons:\n" . join("", map { "\t$_\n" } @_bad_returns);
 	Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
 							       method_name => 'fids_to_operons');
-    }
-    return($return);
-}
-
-
-
-
-=head2 fids_to_operons_local
-
-  $return = $obj->fids_to_operons_local($fids)
-
-=over 4
-
-=item Parameter and return types
-
-=begin html
-
-<pre>
-$fids is a reference to a list where each element is a fid
-$return is a reference to a hash where the key is a fid and the value is an operon
-fid is a string
-operon is a reference to a list where each element is a fid
-
-</pre>
-
-=end html
-
-=begin text
-
-$fids is a reference to a list where each element is a fid
-$return is a reference to a hash where the key is a fid and the value is an operon
-fid is a string
-operon is a reference to a list where each element is a fid
-
-
-=end text
-
-
-
-=item Description
-
-
-
-=back
-
-=cut
-
-sub fids_to_operons_local
-{
-    my $self = shift;
-    my($fids) = @_;
-
-    my @_bad_arguments;
-    (ref($fids) eq 'ARRAY') or push(@_bad_arguments, "Invalid type for argument \"fids\" (value was \"$fids\")");
-    if (@_bad_arguments) {
-	my $msg = "Invalid arguments passed to fids_to_operons_local:\n" . join("", map { "\t$_\n" } @_bad_arguments);
-	Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
-							       method_name => 'fids_to_operons_local');
-    }
-
-    my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
-    my($return);
-    #BEGIN fids_to_operons_local
-
-	$return={};
-
-	if (scalar @$fids)
-	{
-#		my $ctxA = ContextAdapter->new($ctx);
-#		my $user_token = $ctxA->user_token();
-
-		my $moDbh=$self->{moDbh};
-		my $kbCDM=$self->{kbCDM};
-		my $kbMOT=$self->{kbMOT};
-
-		my $externalIds=$kbMOT->fids_to_moLocusIds($fids);
-
-		my $operons={};
-		foreach my $kbId (keys %$externalIds)
-		{
-			my $placeholders='?,' x (scalar @{$externalIds->{$kbId}});
-			chop $placeholders;
-			my $operonSql="SELECT o2.locusId
-		       		FROM Locus2Operon o1, Locus2Operon o2
-				WHERE o1.locusId IN ($placeholders)
-				AND o1.tuId=o2.tuId
-				ORDER BY o2.locusId";
-
-			# this is currently the only ProteinInfo method
-			# that needs to return genes from the same genome
-			# so doing this as a one-off is not horrible
-			# (it will be replaced by ER methods anyway once
-			# operons are a data type in KBase land)
-
-			my $operonLocusIdList=$moDbh->selectcol_arrayref($operonSql,{},@{$externalIds->{$kbId}}) || [];
-			my $moOperonIds_to_kbaseIds=$kbMOT->moLocusIds_to_fids($operonLocusIdList);
-
-			my $genomes=$kbCDM->fids_to_genomes([$kbId]);
-			my $genome=$genomes->{$kbId};
-
-			my $kbOperonIds;
-			# craziness: try to limit operon to the original genome
-			# potentially different operons are called in
-			# different genomes
-			foreach my $moOperonId (keys %$moOperonIds_to_kbaseIds)
-			{
-				my $operonGenomes=$kbCDM->fids_to_genomes($moOperonIds_to_kbaseIds->{$moOperonId});
-				foreach my $kbOperonId (keys %$operonGenomes)
-				{
-					my $operonGenome=$operonGenomes->{$kbOperonId};
-					$kbOperonIds->{$kbOperonId}=1 if ($genome eq $operonGenome);
-				}
-			}
-
-			my @kbOperonIds=keys %$kbOperonIds;
-			$operons->{$kbId}=\@kbOperonIds || [$kbId];
-		}
-		$return=$operons|| {};
-	}
-
-    #END fids_to_operons_local
-    my @_bad_returns;
-    (ref($return) eq 'HASH') or push(@_bad_returns, "Invalid type for return variable \"return\" (value was \"$return\")");
-    if (@_bad_returns) {
-	my $msg = "Invalid returns passed to fids_to_operons_local:\n" . join("", map { "\t$_\n" } @_bad_returns);
-	Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
-							       method_name => 'fids_to_operons_local');
     }
     return($return);
 }
@@ -745,33 +636,34 @@ sub fids_to_orthologs
     my($return);
     #BEGIN fids_to_orthologs
 
-	$return={};
-	my $ua = LWP::UserAgent->new;
-	my $kbMOT=$self->{kbMOT};
+    $return={};
+    my $ua = LWP::UserAgent->new;
+    my $kbMOT=$self->{kbMOT};
 
-	my $fids2externalIds=$kbMOT->fids_to_moLocusIds($fids);
+    my $fids2externalIds=$kbMOT->fids_to_moLocusIds($fids);
 
-	# this is not the best way, but should work
-	foreach my $fid (keys %$fids2externalIds)
-	{
-		my $response=$ua->post("http://www.microbesonline.org/cgi-bin/getOrthologs",Content=>{locusId=>$fids2externalIds->{$fid}[0]});
-		my $json=from_json($response->content);
-		my $moOrthologs=$json->{$fids2externalIds->{$fid}[0]};
-		my $moOrthologs2fids=$kbMOT->moLocusIds_to_fids($moOrthologs);
-
-		my %kbOrthologs;
-		foreach my $moOrthLocusId (keys %$moOrthologs2fids)
+    foreach my $fid (keys %$fids2externalIds) {
+	# run the orthologs query for every locusId that was returned for the fid
+	foreach my $locusId ( @{$fids2externalIds->{$fid}}) {
+	    my $gene = Bio::KBase::ProteinInfoService::Gene::new( locusId => $locusId);
+	    my $moOrthologList = $gene->getOrthologListRef();
+	    my @moOrthologArray = map { $_->{'locusId_'} } @$moOrthologList;
+	    my $moOrthologs = \@moOrthologArray;
+	    my $moOrthologs2fids=$kbMOT->moLocusIds_to_fids($moOrthologs);
+	    
+	    my %kbOrthologs;
+	    foreach my $moOrthLocusId (keys %$moOrthologs2fids)
+	    {
+		next unless ref $moOrthologs2fids->{$moOrthLocusId};
+		foreach my $orthFid (@{$moOrthologs2fids->{$moOrthLocusId}})
 		{
-			next unless ref $moOrthologs2fids->{$moOrthLocusId};
-			foreach my $orthFid (@{$moOrthologs2fids->{$moOrthLocusId}})
-			{
-				$kbOrthologs{$orthFid}=1;
-			}
-#			push @{$return->{$fid}},@{$moOrthologs2fids->{$moOrthLocusId}};
+		    $kbOrthologs{$orthFid}=1;
 		}
-		my @kbOrthologs=keys %kbOrthologs;
-		$return->{$fid} = \@kbOrthologs;
+	    }
+	    my @kbOrthologs=keys %kbOrthologs;
+	    $return->{$fid} = \@kbOrthologs;
 	}
+    }
 
     #END fids_to_orthologs
     my @_bad_returns;
@@ -780,107 +672,6 @@ sub fids_to_orthologs
 	my $msg = "Invalid returns passed to fids_to_orthologs:\n" . join("", map { "\t$_\n" } @_bad_returns);
 	Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
 							       method_name => 'fids_to_orthologs');
-    }
-    return($return);
-}
-
-
-
-
-=head2 fids_to_orthologs_local
-
-  $return = $obj->fids_to_orthologs_local($fids)
-
-=over 4
-
-=item Parameter and return types
-
-=begin html
-
-<pre>
-$fids is a reference to a list where each element is a fid
-$return is a reference to a hash where the key is a fid and the value is an orthologs
-fid is a string
-orthologs is a reference to a list where each element is a fid
-
-</pre>
-
-=end html
-
-=begin text
-
-$fids is a reference to a list where each element is a fid
-$return is a reference to a hash where the key is a fid and the value is an orthologs
-fid is a string
-orthologs is a reference to a list where each element is a fid
-
-
-=end text
-
-
-
-=item Description
-
-
-
-=back
-
-=cut
-
-sub fids_to_orthologs_local
-{
-    my $self = shift;
-    my($fids) = @_;
-
-    my @_bad_arguments;
-    (ref($fids) eq 'ARRAY') or push(@_bad_arguments, "Invalid type for argument \"fids\" (value was \"$fids\")");
-    if (@_bad_arguments) {
-	my $msg = "Invalid arguments passed to fids_to_orthologs_local:\n" . join("", map { "\t$_\n" } @_bad_arguments);
-	Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
-							       method_name => 'fids_to_orthologs_local');
-    }
-
-    my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
-    my($return);
-    #BEGIN fids_to_orthologs_local
-
-	$return={};
-	my $ua = LWP::UserAgent->new;
-	my $kbMOT=$self->{kbMOT};
-
-	my $fids2externalIds=$kbMOT->fids_to_moLocusIds($fids);
-
-	# this is not the best way, but should work
-	foreach my $fid (keys %$fids2externalIds)
-	{
-		#my $response=$ua->post("http://www.microbesonline.org/cgi-bin/getOrthologs",Content=>{locusId=>$fids2externalIds->{$fid}[0]});
-		#my $json=from_json($response->content);
-    	        my $gene = Bio::KBase::ProteinInfoService::Gene::new( locusId => $fids2externalIds->{$fid}[0]);
-		# my $moOrthologs=$json->{$fids2externalIds->{$fid}[0]};
-		my $moOrthologs = $gene->getOrthologListRef()
-		my $moOrthologs2fids=$kbMOT->moLocusIds_to_fids($moOrthologs);
-
-		my %kbOrthologs;
-		foreach my $moOrthLocusId (keys %$moOrthologs2fids)
-		{
-			next unless ref $moOrthologs2fids->{$moOrthLocusId};
-			foreach my $orthFid (@{$moOrthologs2fids->{$moOrthLocusId}})
-			{
-				$kbOrthologs{$orthFid}=1;
-			}
-#			push @{$return->{$fid}},@{$moOrthologs2fids->{$moOrthLocusId}};
-		}
-		my @kbOrthologs=keys %kbOrthologs;
-		$return->{$fid} = \@kbOrthologs;
-	}
-
-    #END fids_to_orthologs_local
-    my @_bad_returns;
-    (ref($return) eq 'HASH') or push(@_bad_returns, "Invalid type for return variable \"return\" (value was \"$return\")");
-    if (@_bad_returns) {
-	my $msg = "Invalid returns passed to fids_to_orthologs_local:\n" . join("", map { "\t$_\n" } @_bad_returns);
-	Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
-							       method_name => 'fids_to_orthologs_local');
     }
     return($return);
 }
@@ -1107,12 +898,10 @@ sub fids_to_go
 <pre>
 $id is a fid
 $thresh is a neighbor_threshold
-$return is a reference to a list where each element is a neighbor
+$return is a neighbor
 fid is a string
 neighbor_threshold is a float
-neighbor is a reference to a list containing 2 items:
-	0: a fid
-	1: a float
+neighbor is a reference to a hash where the key is a fid and the value is a float
 
 </pre>
 
@@ -1122,12 +911,10 @@ neighbor is a reference to a list containing 2 items:
 
 $id is a fid
 $thresh is a neighbor_threshold
-$return is a reference to a list where each element is a neighbor
+$return is a neighbor
 fid is a string
 neighbor_threshold is a float
-neighbor is a reference to a list containing 2 items:
-	0: a fid
-	1: a float
+neighbor is a reference to a hash where the key is a fid and the value is a float
 
 
 =end text
@@ -1137,7 +924,7 @@ neighbor is a reference to a list containing 2 items:
 =item Description
 
 fid_to_neighbor takes as input a single feature id, and
-a neighhbor score threshold and returns a list of neighbors
+a neighbor score threshold and returns a list of neighbors
 where neighbor score >= threshold
 
 =back
@@ -1161,9 +948,11 @@ sub fid_to_neighbors
     my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
     my($return);
     #BEGIN fid_to_neighbors
+    my $rtemp = $self->fidlist_to_neighbors( [ $id ], $thresh);
+    $return = $rtemp->{ $id };
     #END fid_to_neighbors
     my @_bad_returns;
-    (ref($return) eq 'ARRAY') or push(@_bad_returns, "Invalid type for return variable \"return\" (value was \"$return\")");
+    (ref($return) eq 'HASH') or push(@_bad_returns, "Invalid type for return variable \"return\" (value was \"$return\")");
     if (@_bad_returns) {
 	my $msg = "Invalid returns passed to fid_to_neighbors:\n" . join("", map { "\t$_\n" } @_bad_returns);
 	Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
@@ -1175,9 +964,9 @@ sub fid_to_neighbors
 
 
 
-=head2 fids_to_neighbors
+=head2 fidlist_to_neighbors
 
-  $return = $obj->fids_to_neighbors($fids, $thresh)
+  $return = $obj->fidlist_to_neighbors($fids, $thresh)
 
 =over 4
 
@@ -1191,9 +980,7 @@ $thresh is a neighbor_threshold
 $return is a reference to a hash where the key is a fid and the value is a reference to a list where each element is a neighbor
 fid is a string
 neighbor_threshold is a float
-neighbor is a reference to a list containing 2 items:
-	0: a fid
-	1: a float
+neighbor is a reference to a hash where the key is a fid and the value is a float
 
 </pre>
 
@@ -1206,9 +993,7 @@ $thresh is a neighbor_threshold
 $return is a reference to a hash where the key is a fid and the value is a reference to a list where each element is a neighbor
 fid is a string
 neighbor_threshold is a float
-neighbor is a reference to a list containing 2 items:
-	0: a fid
-	1: a float
+neighbor is a reference to a hash where the key is a fid and the value is a float
 
 
 =end text
@@ -1217,7 +1002,7 @@ neighbor is a reference to a list containing 2 items:
 
 =item Description
 
-fids_to_neighbors takes as input a list of feature ids, and
+fidlist_to_neighbors takes as input a list of feature ids, and
 a minimal neighbor score, and returns a mapping of each fid to
 its neighbors, based on neighbor score >= threshold
 
@@ -1225,7 +1010,7 @@ its neighbors, based on neighbor score >= threshold
 
 =cut
 
-sub fids_to_neighbors
+sub fidlist_to_neighbors
 {
     my $self = shift;
     my($fids, $thresh) = @_;
@@ -1234,21 +1019,65 @@ sub fids_to_neighbors
     (ref($fids) eq 'ARRAY') or push(@_bad_arguments, "Invalid type for argument \"fids\" (value was \"$fids\")");
     (!ref($thresh)) or push(@_bad_arguments, "Invalid type for argument \"thresh\" (value was \"$thresh\")");
     if (@_bad_arguments) {
-	my $msg = "Invalid arguments passed to fids_to_neighbors:\n" . join("", map { "\t$_\n" } @_bad_arguments);
+	my $msg = "Invalid arguments passed to fidlist_to_neighbors:\n" . join("", map { "\t$_\n" } @_bad_arguments);
 	Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
-							       method_name => 'fids_to_neighbors');
+							       method_name => 'fidlist_to_neighbors');
     }
 
     my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
     my($return);
-    #BEGIN fids_to_neighbors
-    #END fids_to_neighbors
+    #BEGIN fidlist_to_neighbors
+    my $kbMOT=$self->{kbMOT};
+    my $dbh =$self->{moDbh_dev};
+    my $kbCDM =$self->{kbCDM};
+    my $fid2locus=$kbMOT->fids_to_moLocusIds($fids);
+    my $fid2genome = $kbCDM->fids_to_genomes( $fids);
+
+    my $neighbor1_sql = $dbh->prepare( q{ select m.locusId, n.score from MOGMember m, MOGNeighborScores n where n.mog2 = ? and n.score >= ? and n.mog1 = m.mogId and m.taxonomyId = ? });
+    my $neighbor2_sql = $dbh->prepare( q{ select m.locusId, n.score from MOGMember m, MOGNeighborScores n where n.mog1 = ? and n.score >= ? and n.mog2 = m.mogId and m.taxonomyId = ? });
+    $return = {};
+    my $neighbors = {};
+    foreach my $fid ( keys %$fid2locus) {
+	my $get_mogId= $dbh->prepare( sprintf "select mogId, taxonomyId from MOGMember where locusId in ( %s )",
+	    join( ",", map { "?" } @{$fid2locus->{$fid}}));
+	my $mogIds = $dbh->selectall_arrayref( $get_mogId, {}, @{$fid2locus->{$fid}});
+	foreach my $mogId ( @$mogIds) {
+	    my $n1 = $dbh->selectall_arrayref( $neighbor1_sql, {}, ($mogId->[0], $thresh,$mogId->[1]));
+	    my $n2 = $dbh->selectall_arrayref( $neighbor2_sql, {}, ($mogId->[0], $thresh,$mogId->[1]));
+	    # Grab the locusIds of all the neighbors and translate them into fids
+	    my @locusIds = map { $_->[0] } ( @$n1, @$n2);
+	    my $locus2fids = $kbMOT->moLocusIds_to_fids(\@locusIds);
+	    my %nfids;
+	    # dedupe locus->fids to avoid redundant queries
+	    foreach my $l ( keys %$locus2fids) {
+		foreach my $f ( @{$locus2fids->{$l}}) {
+		    $nfids{ $f } = 1;
+		}
+	    }
+	    my @nfids = keys %nfids;
+	    my $ngenomes = $kbCDM->fids_to_genomes( \@nfids);
+	    # only return the results where the neighbor genome matches $fid genome
+	    foreach my $neighbor ( @$n1, @$n2) {
+		my $locusId = $neighbor->[0];
+		foreach my $nfid ( @{$locus2fids->{$locusId}}) {
+		    if ($ngenomes->{$nfid} eq $fid2genome->{$fid}) {
+			if (! defined($return->{$fid})) {
+			    $return->{$fid} = { $nfid => $neighbor->[1] };
+			} else {
+			    $return->{$fid}->{$nfid} = $neighbor->[1];
+			}
+		    }
+		}
+	    }
+	}
+    }
+    #END fidlist_to_neighbors
     my @_bad_returns;
     (ref($return) eq 'HASH') or push(@_bad_returns, "Invalid type for return variable \"return\" (value was \"$return\")");
     if (@_bad_returns) {
-	my $msg = "Invalid returns passed to fids_to_neighbors:\n" . join("", map { "\t$_\n" } @_bad_returns);
+	my $msg = "Invalid returns passed to fidlist_to_neighbors:\n" . join("", map { "\t$_\n" } @_bad_returns);
 	Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
-							       method_name => 'fids_to_neighbors');
+							       method_name => 'fidlist_to_neighbors');
     }
     return($return);
 }
@@ -1401,7 +1230,7 @@ a float
 
 =item Description
 
-Neighbor is a tuple of fid and a neighbor score
+Neighbor is a hash of fids to a neighbor score
 
 
 =item Definition
@@ -1409,20 +1238,14 @@ Neighbor is a tuple of fid and a neighbor score
 =begin html
 
 <pre>
-a reference to a list containing 2 items:
-0: a fid
-1: a float
-
+a reference to a hash where the key is a fid and the value is a float
 </pre>
 
 =end html
 
 =begin text
 
-a reference to a list containing 2 items:
-0: a fid
-1: a float
-
+a reference to a hash where the key is a fid and the value is a float
 
 =end text
 

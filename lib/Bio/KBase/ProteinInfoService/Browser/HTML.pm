@@ -1,9 +1,9 @@
-package Browser::HTML;
+package Bio::KBase::ProteinInfoService::Browser::HTML;
 require Exporter;
 
 use strict;
 use CGI qw(:standard);
-use Browser::Defaults;
+use Bio::KBase::ProteinInfoService::Browser::Defaults;
 
 use vars '$VERSION';
 use vars qw($defaults);

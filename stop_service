@@ -1,0 +1,10 @@
+#!/bin/sh
+echo trying to stop protein_info_service server.
+pid_file=/kb/deployment/services/protein_info_service/service.pid
+if [ ! -f $pid_file ] ; then 
+	echo "No pid file: $pid_file found for server protein_info_service."
+	exit 1
+fi
+pid=$(cat $pid_file)
+kill $pid
+
