@@ -833,12 +833,10 @@ sub fids_to_go
 <pre>
 $id is a fid
 $thresh is a neighbor_threshold
-$return is a reference to a list where each element is a neighbor
+$return is a neighbor
 fid is a string
 neighbor_threshold is a float
-neighbor is a reference to a list containing 2 items:
-	0: a fid
-	1: a float
+neighbor is a reference to a hash where the key is a fid and the value is a float
 
 </pre>
 
@@ -848,12 +846,10 @@ neighbor is a reference to a list containing 2 items:
 
 $id is a fid
 $thresh is a neighbor_threshold
-$return is a reference to a list where each element is a neighbor
+$return is a neighbor
 fid is a string
 neighbor_threshold is a float
-neighbor is a reference to a list containing 2 items:
-	0: a fid
-	1: a float
+neighbor is a reference to a hash where the key is a fid and the value is a float
 
 
 =end text
@@ -931,9 +927,7 @@ $thresh is a neighbor_threshold
 $return is a reference to a hash where the key is a fid and the value is a reference to a list where each element is a neighbor
 fid is a string
 neighbor_threshold is a float
-neighbor is a reference to a list containing 2 items:
-	0: a fid
-	1: a float
+neighbor is a reference to a hash where the key is a fid and the value is a float
 
 </pre>
 
@@ -946,9 +940,7 @@ $thresh is a neighbor_threshold
 $return is a reference to a hash where the key is a fid and the value is a reference to a list where each element is a neighbor
 fid is a string
 neighbor_threshold is a float
-neighbor is a reference to a list containing 2 items:
-	0: a fid
-	1: a float
+neighbor is a reference to a hash where the key is a fid and the value is a float
 
 
 =end text
@@ -1174,7 +1166,7 @@ a float
 
 =item Description
 
-Neighbor is a tuple of fid and a neighbor score
+Neighbor is a hash of fids to a neighbor score
 
 
 =item Definition
@@ -1182,20 +1174,14 @@ Neighbor is a tuple of fid and a neighbor score
 =begin html
 
 <pre>
-a reference to a list containing 2 items:
-0: a fid
-1: a float
-
+a reference to a hash where the key is a fid and the value is a float
 </pre>
 
 =end html
 
 =begin text
 
-a reference to a list containing 2 items:
-0: a fid
-1: a float
-
+a reference to a hash where the key is a fid and the value is a float
 
 =end text
 
