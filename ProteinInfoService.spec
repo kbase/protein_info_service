@@ -28,9 +28,9 @@ module ProteinInfo {
 	typedef float neighbor_threshold;
 
 	/*
-	Neighbor is a tuple of fid and a neighbor score
+	Neighbor is a hash of fids to a neighbor score
 	*/
-	typedef tuple<fid, float> neighbor;
+	typedef mapping<fid, float> neighbor;
 
 	/*
 	Domains are a list of domain_ids.
@@ -74,7 +74,6 @@ module ProteinInfo {
 	implemented.)
 	*/
 	funcdef fids_to_operons (list<fid> fids) returns (mapping<fid, operon>);
-	funcdef fids_to_operons_local (list<fid> fids) returns (mapping<fid, operon>);
 
 	/*
 	fids_to_domains takes as input a list of feature ids, and
@@ -104,7 +103,6 @@ module ProteinInfo {
 	all genomes.
 	*/
 	funcdef fids_to_orthologs (list<fid> fids) returns (mapping<fid, orthologs>);
-	funcdef fids_to_orthologs_local (list<fid> fids) returns (mapping<fid, orthologs>);
 
 	/*
 	fids_to_ec takes as input a list of feature ids, and returns
@@ -120,15 +118,15 @@ module ProteinInfo {
 
 	/*
 	fid_to_neighbor takes as input a single feature id, and
-	a neighhbor score threshold and returns a list of neighbors
+	a neighbor score threshold and returns a list of neighbors
 	where neighbor score >= threshold */
-	funcdef fid_to_neighbors(fid id, neighbor_threshold thresh) returns (list<neighbor>);
+	funcdef fid_to_neighbors(fid id, neighbor_threshold thresh) returns (neighbor);
 
 	/*
-	fids_to_neighbors takes as input a list of feature ids, and
+	fidlist_to_neighbors takes as input a list of feature ids, and
 	a minimal neighbor score, and returns a mapping of each fid to
 	its neighbors, based on neighbor score >= threshold */
-	funcdef fids_to_neighbors(list<fid> fids, neighbor_threshold thresh) returns (mapping<fid, list<neighbor>>);
+	funcdef fidlist_to_neighbors(list<fid> fids, neighbor_threshold thresh) returns (mapping<fid, list<neighbor>>);
 
 
 };
