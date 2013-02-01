@@ -54,7 +54,6 @@ sub new
 
         # Need to initialize the database handler for that Bio::KBase::ProteinInfoService::Gene depends on
         # the GenomicsUtils module caches the database handle internally
-        my $gene_dbh = Bio::KBase::ProteinInfoService::GenomicsUtils::dbConnect();
 	my $dbms='mysql';
 	my $dbName='genomics';
 	my $user='guest';
@@ -66,8 +65,16 @@ sub new
 	my $moDbh=$dbKernel->{_dbh};
         # we currently have 2 databases in play, this is a connection to the test database
         # on Keith's dev instance
-        my $dbKernel_dev = DBKernel->new($dbms, "genomics_dev", "genomics", undef, $port, "140.221.84.194", $sock);
+	my $dbms_dev='mysql';
+	my $dbName_dev='genomics_dev';
+	my $user_dev='genomics';
+	my $pass_dev=undef;
+	my $port_dev=3306;
+	my $dbhost_dev='140.221.84.194';
+	my $sock_dev='';
+        my $dbKernel_dev = DBKernel->new($dbms_dev, $dbName_dev, $user_dev, $pass_dev, $port_dev, $dbhost_dev, $sock_dev);
         my $moDbh_dev=$dbKernel_dev->{_dbh};
+        my $gene_dbh = Bio::KBase::ProteinInfoService::Browser::DB::dbConnect($dbhost_dev,$user_dev,$pass_dev,$dbName_dev);
 
 #	$self->{kbIdServer}=$kbIdServer;
 	$self->{kbCDM}=$kbCDM;
@@ -212,133 +219,6 @@ sub fids_to_operons
 	my $msg = "Invalid returns passed to fids_to_operons:\n" . join("", map { "\t$_\n" } @_bad_returns);
 	Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
 							       method_name => 'fids_to_operons');
-    }
-    return($return);
-}
-
-
-
-
-=head2 fids_to_operons_local
-
-  $return = $obj->fids_to_operons_local($fids)
-
-=over 4
-
-=item Parameter and return types
-
-=begin html
-
-<pre>
-$fids is a reference to a list where each element is a fid
-$return is a reference to a hash where the key is a fid and the value is an operon
-fid is a string
-operon is a reference to a list where each element is a fid
-
-</pre>
-
-=end html
-
-=begin text
-
-$fids is a reference to a list where each element is a fid
-$return is a reference to a hash where the key is a fid and the value is an operon
-fid is a string
-operon is a reference to a list where each element is a fid
-
-
-=end text
-
-
-
-=item Description
-
-
-
-=back
-
-=cut
-
-sub fids_to_operons_local
-{
-    my $self = shift;
-    my($fids) = @_;
-
-    my @_bad_arguments;
-    (ref($fids) eq 'ARRAY') or push(@_bad_arguments, "Invalid type for argument \"fids\" (value was \"$fids\")");
-    if (@_bad_arguments) {
-	my $msg = "Invalid arguments passed to fids_to_operons_local:\n" . join("", map { "\t$_\n" } @_bad_arguments);
-	Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
-							       method_name => 'fids_to_operons_local');
-    }
-
-    my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
-    my($return);
-    #BEGIN fids_to_operons_local
-
-	$return={};
-
-	if (scalar @$fids)
-	{
-#		my $ctxA = ContextAdapter->new($ctx);
-#		my $user_token = $ctxA->user_token();
-
-		my $moDbh=$self->{moDbh};
-		my $kbCDM=$self->{kbCDM};
-		my $kbMOT=$self->{kbMOT};
-
-		my $externalIds=$kbMOT->fids_to_moLocusIds($fids);
-
-		my $operons={};
-		foreach my $kbId (keys %$externalIds)
-		{
-			my $placeholders='?,' x (scalar @{$externalIds->{$kbId}});
-			chop $placeholders;
-			my $operonSql="SELECT o2.locusId
-		       		FROM Locus2Operon o1, Locus2Operon o2
-				WHERE o1.locusId IN ($placeholders)
-				AND o1.tuId=o2.tuId
-				ORDER BY o2.locusId";
-
-			# this is currently the only ProteinInfo method
-			# that needs to return genes from the same genome
-			# so doing this as a one-off is not horrible
-			# (it will be replaced by ER methods anyway once
-			# operons are a data type in KBase land)
-
-			my $operonLocusIdList=$moDbh->selectcol_arrayref($operonSql,{},@{$externalIds->{$kbId}}) || [];
-			my $moOperonIds_to_kbaseIds=$kbMOT->moLocusIds_to_fids($operonLocusIdList);
-
-			my $genomes=$kbCDM->fids_to_genomes([$kbId]);
-			my $genome=$genomes->{$kbId};
-
-			my $kbOperonIds;
-			# craziness: try to limit operon to the original genome
-			# potentially different operons are called in
-			# different genomes
-			foreach my $moOperonId (keys %$moOperonIds_to_kbaseIds)
-			{
-				my $operonGenomes=$kbCDM->fids_to_genomes($moOperonIds_to_kbaseIds->{$moOperonId});
-				foreach my $kbOperonId (keys %$operonGenomes)
-				{
-					my $operonGenome=$operonGenomes->{$kbOperonId};
-					$kbOperonIds->{$kbOperonId}=1 if ($genome eq $operonGenome);
-				}
-			}
-
-			my @kbOperonIds=keys %$kbOperonIds;
-			$operons->{$kbId}=\@kbOperonIds || [$kbId];
-		}
-		$return=$operons|| {};
-	}
-
-    #END fids_to_operons_local
-    my @_bad_returns;
-    (ref($return) eq 'HASH') or push(@_bad_returns, "Invalid type for return variable \"return\" (value was \"$return\")");
-    if (@_bad_returns) {
-	my $msg = "Invalid returns passed to fids_to_operons_local:\n" . join("", map { "\t$_\n" } @_bad_returns);
-	Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
-							       method_name => 'fids_to_operons_local');
     }
     return($return);
 }
@@ -756,33 +636,34 @@ sub fids_to_orthologs
     my($return);
     #BEGIN fids_to_orthologs
 
-	$return={};
-	my $ua = LWP::UserAgent->new;
-	my $kbMOT=$self->{kbMOT};
+    $return={};
+    my $ua = LWP::UserAgent->new;
+    my $kbMOT=$self->{kbMOT};
 
-	my $fids2externalIds=$kbMOT->fids_to_moLocusIds($fids);
+    my $fids2externalIds=$kbMOT->fids_to_moLocusIds($fids);
 
-	# this is not the best way, but should work
-	foreach my $fid (keys %$fids2externalIds)
-	{
-		my $response=$ua->post("http://www.microbesonline.org/cgi-bin/getOrthologs",Content=>{locusId=>$fids2externalIds->{$fid}[0]});
-		my $json=from_json($response->content);
-		my $moOrthologs=$json->{$fids2externalIds->{$fid}[0]};
-		my $moOrthologs2fids=$kbMOT->moLocusIds_to_fids($moOrthologs);
-
-		my %kbOrthologs;
-		foreach my $moOrthLocusId (keys %$moOrthologs2fids)
+    foreach my $fid (keys %$fids2externalIds) {
+	# run the orthologs query for every locusId that was returned for the fid
+	foreach my $locusId ( @{$fids2externalIds->{$fid}}) {
+	    my $gene = Bio::KBase::ProteinInfoService::Gene::new( locusId => $locusId);
+	    my $moOrthologList = $gene->getOrthologListRef();
+	    my @moOrthologArray = map { $_->{'locusId_'} } @$moOrthologList;
+	    my $moOrthologs = \@moOrthologArray;
+	    my $moOrthologs2fids=$kbMOT->moLocusIds_to_fids($moOrthologs);
+	    
+	    my %kbOrthologs;
+	    foreach my $moOrthLocusId (keys %$moOrthologs2fids)
+	    {
+		next unless ref $moOrthologs2fids->{$moOrthLocusId};
+		foreach my $orthFid (@{$moOrthologs2fids->{$moOrthLocusId}})
 		{
-			next unless ref $moOrthologs2fids->{$moOrthLocusId};
-			foreach my $orthFid (@{$moOrthologs2fids->{$moOrthLocusId}})
-			{
-				$kbOrthologs{$orthFid}=1;
-			}
-#			push @{$return->{$fid}},@{$moOrthologs2fids->{$moOrthLocusId}};
+		    $kbOrthologs{$orthFid}=1;
 		}
-		my @kbOrthologs=keys %kbOrthologs;
-		$return->{$fid} = \@kbOrthologs;
+	    }
+	    my @kbOrthologs=keys %kbOrthologs;
+	    $return->{$fid} = \@kbOrthologs;
 	}
+    }
 
     #END fids_to_orthologs
     my @_bad_returns;
@@ -791,106 +672,6 @@ sub fids_to_orthologs
 	my $msg = "Invalid returns passed to fids_to_orthologs:\n" . join("", map { "\t$_\n" } @_bad_returns);
 	Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
 							       method_name => 'fids_to_orthologs');
-    }
-    return($return);
-}
-
-
-
-
-=head2 fids_to_orthologs_local
-
-  $return = $obj->fids_to_orthologs_local($fids)
-
-=over 4
-
-=item Parameter and return types
-
-=begin html
-
-<pre>
-$fids is a reference to a list where each element is a fid
-$return is a reference to a hash where the key is a fid and the value is an orthologs
-fid is a string
-orthologs is a reference to a list where each element is a fid
-
-</pre>
-
-=end html
-
-=begin text
-
-$fids is a reference to a list where each element is a fid
-$return is a reference to a hash where the key is a fid and the value is an orthologs
-fid is a string
-orthologs is a reference to a list where each element is a fid
-
-
-=end text
-
-
-
-=item Description
-
-
-
-=back
-
-=cut
-
-sub fids_to_orthologs_local
-{
-    my $self = shift;
-    my($fids) = @_;
-
-    my @_bad_arguments;
-    (ref($fids) eq 'ARRAY') or push(@_bad_arguments, "Invalid type for argument \"fids\" (value was \"$fids\")");
-    if (@_bad_arguments) {
-	my $msg = "Invalid arguments passed to fids_to_orthologs_local:\n" . join("", map { "\t$_\n" } @_bad_arguments);
-	Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
-							       method_name => 'fids_to_orthologs_local');
-    }
-
-    my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
-    my($return);
-    #BEGIN fids_to_orthologs_local
-
-	$return={};
-	my $ua = LWP::UserAgent->new;
-	my $kbMOT=$self->{kbMOT};
-
-	my $fids2externalIds=$kbMOT->fids_to_moLocusIds($fids);
-
-	foreach my $fid (keys %$fids2externalIds) {
-	    # run the orthologs query for every locusId that was returned for the fid
-	    foreach my $locusId ( @{$fids2externalIds->{$fid}}) {
-    	        my $gene = Bio::KBase::ProteinInfoService::Gene::new( locusId => $locusId);
-		my $moOrthologList = $gene->getOrthologListRef();
-		my @moOrthologArray = map { $_->{'locusId_'} } @$moOrthologList;
-		my $moOrthologs = \@moOrthologArray;
-		my $moOrthologs2fids=$kbMOT->moLocusIds_to_fids($moOrthologs);
-
-		my %kbOrthologs;
-		foreach my $moOrthLocusId (keys %$moOrthologs2fids)
-		{
-			next unless ref $moOrthologs2fids->{$moOrthLocusId};
-			foreach my $orthFid (@{$moOrthologs2fids->{$moOrthLocusId}})
-			{
-				$kbOrthologs{$orthFid}=1;
-			}
-		}
-		my @kbOrthologs=keys %kbOrthologs;
-		$return->{$fid} = \@kbOrthologs;
-	    }
-	}
-
-    #END fids_to_orthologs_local
-    my @_bad_returns;
-    (ref($return) eq 'HASH') or push(@_bad_returns, "Invalid type for return variable \"return\" (value was \"$return\")");
-    if (@_bad_returns) {
-	my $msg = "Invalid returns passed to fids_to_orthologs_local:\n" . join("", map { "\t$_\n" } @_bad_returns);
-	Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
-							       method_name => 'fids_to_orthologs_local');
     }
     return($return);
 }
@@ -1257,8 +1038,8 @@ sub fidlist_to_neighbors
     $return = {};
     my $neighbors = {};
     foreach my $fid ( keys %$fid2locus) {
-	my $whats = join( ",", map { "?" } @{$fid2locus->{$fid}});
-	my $get_mogId= $dbh->prepare( sprintf "select mogId, taxonomyId from MOGMember where locusId in ( %s )", $whats );
+	my $get_mogId= $dbh->prepare( sprintf "select mogId, taxonomyId from MOGMember where locusId in ( %s )",
+	    join( ",", map { "?" } @{$fid2locus->{$fid}}));
 	my $mogIds = $dbh->selectall_arrayref( $get_mogId, {}, @{$fid2locus->{$fid}});
 	foreach my $mogId ( @$mogIds) {
 	    my $n1 = $dbh->selectall_arrayref( $neighbor1_sql, {}, ($mogId->[0], $thresh,$mogId->[1]));

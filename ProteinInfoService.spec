@@ -74,7 +74,6 @@ module ProteinInfo {
 	implemented.)
 	*/
 	funcdef fids_to_operons (list<fid> fids) returns (mapping<fid, operon>);
-	funcdef fids_to_operons_local (list<fid> fids) returns (mapping<fid, operon>);
 
 	/*
 	fids_to_domains takes as input a list of feature ids, and
@@ -104,7 +103,6 @@ module ProteinInfo {
 	all genomes.
 	*/
 	funcdef fids_to_orthologs (list<fid> fids) returns (mapping<fid, orthologs>);
-	funcdef fids_to_orthologs_local (list<fid> fids) returns (mapping<fid, orthologs>);
 
 	/*
 	fids_to_ec takes as input a list of feature ids, and returns
