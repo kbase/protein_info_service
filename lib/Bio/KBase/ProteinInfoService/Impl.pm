@@ -1117,12 +1117,10 @@ sub fids_to_go
 <pre>
 $id is a fid
 $thresh is a neighbor_threshold
-$return is a reference to a list where each element is a neighbor
+$return is a neighbor
 fid is a string
 neighbor_threshold is a float
-neighbor is a reference to a list containing 2 items:
-	0: a fid
-	1: a float
+neighbor is a reference to a hash where the key is a fid and the value is a float
 
 </pre>
 
@@ -1132,12 +1130,10 @@ neighbor is a reference to a list containing 2 items:
 
 $id is a fid
 $thresh is a neighbor_threshold
-$return is a reference to a list where each element is a neighbor
+$return is a neighbor
 fid is a string
 neighbor_threshold is a float
-neighbor is a reference to a list containing 2 items:
-	0: a fid
-	1: a float
+neighbor is a reference to a hash where the key is a fid and the value is a float
 
 
 =end text
@@ -1171,15 +1167,16 @@ sub fid_to_neighbors
     my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
     my($return);
     #BEGIN fid_to_neighbors
+    my $rtemp = $self->fidlist_to_neighbors( [ $id ], $thresh);
+    $return = $rtemp->{ $id };
     #END fid_to_neighbors
     my @_bad_returns;
-    (ref($return) eq 'ARRAY') or push(@_bad_returns, "Invalid type for return variable \"return\" (value was \"$return\")");
+    (ref($return) eq 'HASH') or push(@_bad_returns, "Invalid type for return variable \"return\" (value was \"$return\")");
     if (@_bad_returns) {
 	my $msg = "Invalid returns passed to fid_to_neighbors:\n" . join("", map { "\t$_\n" } @_bad_returns);
 	Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
 							       method_name => 'fid_to_neighbors');
     }
-
     return($return);
 }
 
@@ -1202,9 +1199,7 @@ $thresh is a neighbor_threshold
 $return is a reference to a hash where the key is a fid and the value is a reference to a list where each element is a neighbor
 fid is a string
 neighbor_threshold is a float
-neighbor is a reference to a list containing 2 items:
-	0: a fid
-	1: a float
+neighbor is a reference to a hash where the key is a fid and the value is a float
 
 </pre>
 
@@ -1217,9 +1212,7 @@ $thresh is a neighbor_threshold
 $return is a reference to a hash where the key is a fid and the value is a reference to a list where each element is a neighbor
 fid is a string
 neighbor_threshold is a float
-neighbor is a reference to a list containing 2 items:
-	0: a fid
-	1: a float
+neighbor is a reference to a hash where the key is a fid and the value is a float
 
 
 =end text
@@ -1259,9 +1252,9 @@ sub fidlist_to_neighbors
     my $fid2locus=$kbMOT->fids_to_moLocusIds($fids);
     my $fid2genome = $kbCDM->fids_to_genomes( $fids);
 
-    my $neighbor1_sql = $dbh->prepare( q{ select m.locusId, n.score from MOGMember m, MOGNeighborScores n where n.mog2 = ? and n.score >= ? and n.mog1 = m.mogId and m.taxnomyId = ? });
-    my $neighbor2_sql = $dbh->prepare( q{ select m.locusId, n.score from MOGMember m, MOGNeighborScores n where n.mog1 = ? and n.score >= ? and n.mog2 = m.mogId and m.taxnomyId = ? });
-    $return = [];
+    my $neighbor1_sql = $dbh->prepare( q{ select m.locusId, n.score from MOGMember m, MOGNeighborScores n where n.mog2 = ? and n.score >= ? and n.mog1 = m.mogId and m.taxonomyId = ? });
+    my $neighbor2_sql = $dbh->prepare( q{ select m.locusId, n.score from MOGMember m, MOGNeighborScores n where n.mog1 = ? and n.score >= ? and n.mog2 = m.mogId and m.taxonomyId = ? });
+    $return = {};
     my $neighbors = {};
     foreach my $fid ( keys %$fid2locus) {
 	my $whats = join( ",", map { "?" } @{$fid2locus->{$fid}});
@@ -1271,11 +1264,29 @@ sub fidlist_to_neighbors
 	    my $n1 = $dbh->selectall_arrayref( $neighbor1_sql, {}, ($mogId->[0], $thresh,$mogId->[1]));
 	    my $n2 = $dbh->selectall_arrayref( $neighbor2_sql, {}, ($mogId->[0], $thresh,$mogId->[1]));
 	    # Grab the locusIds of all the neighbors and translate them into fids
-	    my @locusIds = map { $_[0] } ( @$n1, @$n2);
+	    my @locusIds = map { $_->[0] } ( @$n1, @$n2);
 	    my $locus2fids = $kbMOT->moLocusIds_to_fids(\@locusIds);
-	    # only return the table where the neighbor genome matches $fid genome
+	    my %nfids;
+	    # dedupe locus->fids to avoid redundant queries
+	    foreach my $l ( keys %$locus2fids) {
+		foreach my $f ( @{$locus2fids->{$l}}) {
+		    $nfids{ $f } = 1;
+		}
+	    }
+	    my @nfids = keys %nfids;
+	    my $ngenomes = $kbCDM->fids_to_genomes( \@nfids);
+	    # only return the results where the neighbor genome matches $fid genome
 	    foreach my $neighbor ( @$n1, @$n2) {
-		push @$return, [ $locus2fids->{$neighbor->[0]}, $neighbor->[1]];
+		my $locusId = $neighbor->[0];
+		foreach my $nfid ( @{$locus2fids->{$locusId}}) {
+		    if ($ngenomes->{$nfid} eq $fid2genome->{$fid}) {
+			if (! defined($return->{$fid})) {
+			    $return->{$fid} = { $nfid => $neighbor->[1] };
+			} else {
+			    $return->{$fid}->{$nfid} = $neighbor->[1];
+			}
+		    }
+		}
 	    }
 	}
     }
@@ -1438,7 +1449,7 @@ a float
 
 =item Description
 
-Neighbor is a tuple of fid and a neighbor score
+Neighbor is a hash of fids to a neighbor score
 
 
 =item Definition
@@ -1446,20 +1457,14 @@ Neighbor is a tuple of fid and a neighbor score
 =begin html
 
 <pre>
-a reference to a list containing 2 items:
-0: a fid
-1: a float
-
+a reference to a hash where the key is a fid and the value is a float
 </pre>
 
 =end html
 
 =begin text
 
-a reference to a list containing 2 items:
-0: a fid
-1: a float
-
+a reference to a hash where the key is a fid and the value is a float
 
 =end text
 
