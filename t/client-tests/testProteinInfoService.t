@@ -63,7 +63,12 @@ $num_tests++;
 isa_ok($client, "Bio::KBase::ProteinInfoService::Client", "Is it the right class?");
 $num_tests++;
 
-my @good_fids = qw(kb|g.21765.CDS.87 kb|g.21765.CDS.3228 kb|g.20029.peg.3202 kb|g.20029.peg.2255);
+#my @good_fids = qw(kb|g.21765.CDS.87 kb|g.21765.CDS.3228 kb|g.20029.peg.3202 kb|g.20029.peg.2255);
+my @good_fids = qw(
+kb|g.1870.peg.3069
+kb|g.1084.peg.101
+kb|g.357.peg.3639
+);
 my @empty_fids = qw();
 my @bad_fids = qw(bad_fid this_is_bad_too);
 
