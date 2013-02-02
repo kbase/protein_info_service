@@ -956,7 +956,7 @@ sub fid_to_neighbors
     #BEGIN fid_to_neighbors
     return {} unless ($id);
     my $rtemp = $self->fidlist_to_neighbors( [ $id ], $thresh);
-    $return = $rtemp->{ $id };
+    $return = $rtemp->{ $id } || {};
     #END fid_to_neighbors
     my @_bad_returns;
     (ref($return) eq 'HASH') or push(@_bad_returns, "Invalid type for return variable \"return\" (value was \"$return\")");
