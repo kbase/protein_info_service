@@ -81,7 +81,7 @@ my @bad_domains = qw(bad_domain another_bad_domain);
 
 my $method_calls = {
 	fid_to_neighbors => {
-		happy => $happy_fids[0],
+		happy => $good_fids[0],
 		empty => $empty_fids[0],
 		bad => $bad_fids[0],
 		opts => [0.01],
