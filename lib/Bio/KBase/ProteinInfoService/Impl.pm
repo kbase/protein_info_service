@@ -954,6 +954,7 @@ sub fid_to_neighbors
     my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
     my($return);
     #BEGIN fid_to_neighbors
+    return {} unless ($id);
     my $rtemp = $self->fidlist_to_neighbors( [ $id ], $thresh);
     $return = $rtemp->{ $id };
     #END fid_to_neighbors
