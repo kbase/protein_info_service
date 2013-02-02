@@ -1033,6 +1033,9 @@ sub fidlist_to_neighbors
     my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
     my($return);
     #BEGIN fidlist_to_neighbors
+
+    return {} unless (scalar @$fids);
+
     my $kbMOT=$self->{kbMOT};
     my $dbh =$self->{moDbh_dev};
     my $kbCDM =$self->{kbCDM};
