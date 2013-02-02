@@ -82,7 +82,7 @@ my @bad_domains = qw(bad_domain another_bad_domain);
 my $method_calls = {
 	fid_to_neighbors => {
 		happy => $good_fids[0],
-		empty => $empty_fids[0],
+		empty => '',
 		bad => $bad_fids[0],
 		opts => [0.01],
 	},
@@ -130,7 +130,7 @@ my $method_calls = {
 };
 
 my @methodCalls=qw(fids_to_orthologs fids_to_operons fids_to_ipr fids_to_ec fids_to_go domains_to_fids fids_to_domains fidlist_to_neighbors);
-#@methodCalls=qw(fids_to_domains);
+#@methodCalls=qw(fid_to_neighbors fidlist_to_neighbors);
 
 foreach my $call (@methodCalls) {
 	my $result;
@@ -152,15 +152,20 @@ foreach my $call (@methodCalls) {
 	## 2. Test that we got the number of elements in the result that we expect.
 	# (this works because we're only passing an array ref for each method,
         # so don't copy this bit to other modules...)
-	is(scalar(keys %{ $result }), scalar(@{ $method_calls->{$call}->{happy} }), "\"$call\" returned the same number of elements that was passed")
-		if (ref $method_calls->{$call}->{happy} eq 'ARRAY');
-	$num_tests++;
+	if (ref $method_calls->{$call}->{happy} eq 'ARRAY')
+	{
+		is(scalar(keys %{ $result }), scalar(@{ $method_calls->{$call}->{happy} }), "\"$call\" returned the same number of elements that was passed");
+		$num_tests++;
+	}
 	
 	## 3. Test that the elements returned are the correct values.
 	# (we don't really care about the actual values of the calls)
 	my @keys = keys %{ $result };
-	cmp_set(\@keys, $method_calls->{$call}->{happy}, "\"$call\" returned the correct set of elements");
-	$num_tests++;
+	if (ref $keys[0] eq 'ARRAY')
+	{
+		cmp_set(\@keys, $method_calls->{$call}->{happy}, "\"$call\" returned the correct set of elements");
+		$num_tests++;
+	}
 
 	## 4. Test that the actual values are unique in the list.
 	# Again, we don't care what they are, only that there's one of each.
@@ -172,6 +177,11 @@ foreach my $call (@methodCalls) {
 		# Perl - the write-only language, at work.
 		# kkeller: only need to check for arrayrefs
 		# if hashref, by definition keys are unique
+		if (ref $result->{$key} eq 'HASH')
+		{
+			$num_uniq_results++;
+			next;
+		}
 		next unless (ref $result->{$key} eq 'ARRAY');
 		my $count = scalar(keys %{{ map { $_ => 1 } @{$result->{$key}} }});
 		# print $count . " " . scalar(@{ $result->{$key} }) . "\n";
@@ -179,20 +189,25 @@ foreach my $call (@methodCalls) {
 			$num_uniq_results++;
 		}
 	}
-	ok($num_uniq_results == scalar(keys(%{ $result })), "\"$call\" returned unique sets of results");
-	$num_tests++;
+	if (ref $method_calls->{$call}->{happy} eq 'ARRAY')
+	{
+		ok($num_uniq_results == scalar(keys(%{ $result })), "\"$call\" returned unique sets of results");
+		$num_tests++;
+	}
 
+	$result=undef;
 	## 5. Test with empty (but correctly formatted) values.
 	{
 		no strict "refs";
-		eval { $result = $client->$call($method_calls->{$call}->{empty},@{$method_calls->{$call}->{opts}}); }
+		eval { $result = $client->$call($method_calls->{$call}->{empty}, @{$method_calls->{$call}->{opts}}); }
 	}
 	if ($@) { print "ERROR = $@\n"; }
-	warn Dumper($result);
 	ok($result, "Got a response from \"$call\" with empty input");
+	warn Dumper($result);
 	$num_tests++;
 
 	## 6. Test with bad (but correctly formatted) data.
+	$result=undef;
 	{
 		no strict "refs";
 note("test $num_tests and method $method_calls\n");
