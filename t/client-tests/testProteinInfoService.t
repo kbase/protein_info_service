@@ -8,7 +8,7 @@
 # November 28, 2012
 # November Build Meeting @ Argonne
 # updated 12/6/2012 landml
-# more updates 12 dec 2012 kkeller
+# more updates 12 dec 2012, 1 feb 2013 kkeller
 ###############################################################################
 
 use strict;
@@ -163,6 +163,9 @@ foreach my $call (@methodCalls) {
 		# it maps all elements in the array into a hash where the values are just 1,
 		# then gets the number of keys.
 		# Perl - the write-only language, at work.
+		# kkeller: only need to check for arrayrefs
+		# if hashref, by definition keys are unique
+		next if (ref $result->{$key} eq 'HASH');
 		my $count = scalar(keys %{{ map { $_ => 1 } @{$result->{$key}} }});
 		# print $count . " " . scalar(@{ $result->{$key} }) . "\n";
 		if ($count == scalar(@{ $result->{$key} })) {
