@@ -152,7 +152,8 @@ foreach my $call (@methodCalls) {
 	## 2. Test that we got the number of elements in the result that we expect.
 	# (this works because we're only passing an array ref for each method,
         # so don't copy this bit to other modules...)
-	is(scalar(keys %{ $result }), scalar(@{ $method_calls->{$call}->{happy} }), "\"$call\" returned the same number of elements that was passed");
+	is(scalar(keys %{ $result }), scalar(@{ $method_calls->{$call}->{happy} }), "\"$call\" returned the same number of elements that was passed")
+		if (ref $method_calls->{$call}->{happy} eq 'ARRAY');
 	$num_tests++;
 	
 	## 3. Test that the elements returned are the correct values.
