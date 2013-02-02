@@ -69,14 +69,23 @@ kb|g.1870.peg.3069
 kb|g.1084.peg.101
 kb|g.357.peg.3639
 );
+# this peg causes problems with fids_to_domains
+#kb|g.357.peg.3639
+
 my @empty_fids = qw();
 my @bad_fids = qw(bad_fid this_is_bad_too);
 
-my @good_domains = qw(PF00308 PF08399);
+my @good_domains = qw(PF00308 COG0593 TIGR00001);
 my @empty_domains = qw();
 my @bad_domains = qw(bad_domain another_bad_domain);
 
 my $method_calls = {
+	fidlist_to_neighbors => {
+		happy => \@good_fids,
+		empty => \@empty_fids,
+		bad => \@bad_fids,
+		opts => [0.01],
+	},
 	fids_to_operons => {
 		happy => \@good_fids,
 		empty => \@empty_fids,
@@ -114,12 +123,15 @@ my $method_calls = {
         },
 };
 
-foreach my $call (keys %{ $method_calls }) {
+my @methodCalls=qw(fids_to_orthologs fids_to_operons fids_to_ipr fids_to_ec fids_to_go domains_to_fids fids_to_domains fidlist_to_neighbors);
+#@methodCalls=qw(fids_to_domains);
+
+foreach my $call (@methodCalls) {
 	my $result;
 	print "\nTesting function \"$call\"\n";
 	{
 		no strict "refs";
-		eval { $result = $client->$call($method_calls->{$call}->{happy}); };
+		eval { $result = $client->$call($method_calls->{$call}->{happy},@{$method_calls->{$call}->{opts}}); };
 	}
 	
 #	if ($@) { print "ERROR = $@\n"; }
@@ -127,7 +139,7 @@ foreach my $call (keys %{ $method_calls }) {
 	## 1. Test if we got a result of any kind from the method call.
 	ok($result, "Got a response from \"$call\" with happy data");
 	$num_tests++;	
-	# warn Dumper($result);
+	warn Dumper($result);
 	# this works because we're only passing an array ref for each method,
 	# so don't copy this bit to other modules...
 
@@ -163,9 +175,10 @@ foreach my $call (keys %{ $method_calls }) {
 	## 5. Test with empty (but correctly formatted) values.
 	{
 		no strict "refs";
-		eval { $result = $client->$call($method_calls->{$call}->{empty}); }
+		eval { $result = $client->$call($method_calls->{$call}->{empty},@{$method_calls->{$call}->{opts}}); }
 	}
 	if ($@) { print "ERROR = $@\n"; }
+	warn Dumper($result);
 	ok($result, "Got a response from \"$call\" with empty input");
 	$num_tests++;
 
@@ -173,9 +186,10 @@ foreach my $call (keys %{ $method_calls }) {
 	{
 		no strict "refs";
 note("test $num_tests and method $method_calls\n");
-		eval { $result = $client->$call($method_calls->{$call}->{bad}); }
+		eval { $result = $client->$call($method_calls->{$call}->{bad},@{$method_calls->{$call}->{opts}}); }
 	}
 	if ($@) { print "ERROR = $@\n"; }
+	warn Dumper($result);
 	ok($result, "Got a response from \"$call\" with bad input");
 	$num_tests++;
 }

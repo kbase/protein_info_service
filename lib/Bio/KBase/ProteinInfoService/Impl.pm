@@ -300,7 +300,7 @@ sub fids_to_domains
 		# this is not the best way, but should work
 		foreach my $fid (keys %$fids2externalIds)
 		{
-			my $domainSql='SELECT DISTINCT locusId,domainId FROM Locus2Domain WHERE
+			my $domainSql='SELECT locusId,domainId FROM Locus2Domain WHERE
 				locusId = ?';
 #			my $placeholders='?,' x (@{$fids2externalIds->{$fid}});
 #			chop $placeholders;
@@ -308,20 +308,25 @@ sub fids_to_domains
 		
 			my $domainSth=$moDbh->prepare($domainSql);
 			$domainSth->execute($fids2externalIds->{$fid}[0]);
+
+			my %domains;
+
 			while (my $row=$domainSth->fetch)
 			{
-				push @{$return->{$fid}},$row->[1];
+				$domains{$row->[1]} += 1;
 			}
 
-			my $cogSql='SELECT DISTINCT locusId,CONCAT("COG",cogInfoId) FROM COG WHERE
+			my $cogSql='SELECT locusId,CONCAT("COG",cogInfoId) FROM COG WHERE
 				locusId = ?';
 		
 			my $cogSth=$moDbh->prepare($cogSql);
 			$cogSth->execute($fids2externalIds->{$fid}[0]);
 			while (my $row=$cogSth->fetch)
 			{
-				push @{$return->{$fid}},$row->[1];
+				$domains{$row->[1]} += 1;
 			}
+
+			@{$return->{$fid}}=keys %domains;
 
 		}
 	}
@@ -415,21 +420,21 @@ sub domains_to_fids
 		foreach my $domainId (@$domain_ids)
 		{
 			$return->{$domainId}=[];
-			my $domainSql='SELECT DISTINCT locusId FROM Locus2Domain WHERE
+			my $domainSql='SELECT locusId FROM Locus2Domain WHERE
 				domainId = ?';
 		
 			my $domainSth=$moDbh->prepare($domainSql);
 			$domainSth->execute($domainId);
-			my @externalIds;
+			my %externalIds;
 			while (my $row=$domainSth->fetch)
 			{
-				push @externalIds,$row->[0];
+				$externalIds{$row->[0]} += 1;
 			}
 
 			my ($cogInfoId)=$domainId=~/^COG(\d+)$/;
 			if ($cogInfoId)
 			{
-				my $cogSql='SELECT DISTINCT locusId FROM COG WHERE
+				my $cogSql='SELECT locusId FROM COG WHERE
 					cogInfoId = ?';
 		
 				my $cogSth=$moDbh->prepare($cogSql);
@@ -437,10 +442,11 @@ sub domains_to_fids
 				$cogSth->execute($cogInfoId);
 				while (my $row=$cogSth->fetch)
 				{
-					push @externalIds,$row->[0];
+					$externalIds{$row->[0]} += 1;
 				}
 			}
 
+			my @externalIds=keys %externalIds;
 			if (scalar @externalIds)
 			{
 				my $extIds2fids=$kbMOT->moLocusIds_to_fids(\@externalIds);
