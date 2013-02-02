@@ -129,7 +129,7 @@ my $method_calls = {
         },
 };
 
-my @methodCalls=qw(fids_to_orthologs fids_to_operons fids_to_ipr fids_to_ec fids_to_go domains_to_fids fids_to_domains fidlist_to_neighbors);
+my @methodCalls=qw(fids_to_orthologs fids_to_operons fids_to_ipr fids_to_ec fids_to_go domains_to_fids fids_to_domains fidlist_to_neighbors fid_to_neighbors);
 #@methodCalls=qw(fid_to_neighbors fidlist_to_neighbors);
 
 foreach my $call (@methodCalls) {
