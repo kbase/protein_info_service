@@ -172,7 +172,7 @@ foreach my $call (@methodCalls) {
 		# Perl - the write-only language, at work.
 		# kkeller: only need to check for arrayrefs
 		# if hashref, by definition keys are unique
-		next if (ref $result->{$key} eq 'HASH');
+		next unless (ref $result->{$key} eq 'ARRAY');
 		my $count = scalar(keys %{{ map { $_ => 1 } @{$result->{$key}} }});
 		# print $count . " " . scalar(@{ $result->{$key} }) . "\n";
 		if ($count == scalar(@{ $result->{$key} })) {
