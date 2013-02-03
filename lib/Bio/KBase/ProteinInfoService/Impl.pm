@@ -670,8 +670,8 @@ sub fids_to_orthologs
 		    $kbOrthologs{$orthFid}=1;
 		}
 	    }
-	    my @kbOrthologs=keys %kbOrthologs;
-	    $return->{$fid} = \@kbOrthologs;
+	    $return->{$fid} = [] unless defined( $return->{$fid});
+	    push @{$return->{$fid}}, keys %kbOrthologs;
 	}
     }
 
