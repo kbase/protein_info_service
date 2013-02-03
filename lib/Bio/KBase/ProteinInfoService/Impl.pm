@@ -61,8 +61,8 @@ sub new
 	my $port=3306;
 	my $dbhost='db1.chicago.kbase.us';
 	my $sock='';
-	my $dbKernel = DBKernel->new($dbms, $dbName, $user, $pass, $port, $dbhost, $sock);
-	my $moDbh=$dbKernel->{_dbh};
+#	my $dbKernel = DBKernel->new($dbms, $dbName, $user, $pass, $port, $dbhost, $sock);
+#	my $moDbh=$dbKernel->{_dbh};
         # we currently have 2 databases in play, this is a connection to the test database
         # on Keith's dev instance
 	my $dbms_dev='mysql';
@@ -72,6 +72,9 @@ sub new
 	my $port_dev=3306;
 	my $dbhost_dev='140.221.84.194';
 	my $sock_dev='';
+	# use keith's dev instance for both db handles
+        $dbKernel = DBKernel->new($dbms_dev, $dbName_dev, $user_dev, $pass_dev, $port_dev, $dbhost_dev, $sock_dev);
+        $moDbh=$dbKernel_dev->{_dbh};
         my $dbKernel_dev = DBKernel->new($dbms_dev, $dbName_dev, $user_dev, $pass_dev, $port_dev, $dbhost_dev, $sock_dev);
         my $moDbh_dev=$dbKernel_dev->{_dbh};
         my $gene_dbh = Bio::KBase::ProteinInfoService::Browser::DB::dbConnect($dbhost_dev,$user_dev,$pass_dev,$dbName_dev);
@@ -553,6 +556,7 @@ sub fids_to_ipr
 		# this is not the best way, but should work
 		foreach my $fid (keys %$fids2externalIds)
 		{
+			$return->{$fid} = [];
 			my $iprSql='SELECT DISTINCT locusId,iprId FROM Locus2Ipr WHERE
 				locusId = ?';
 #			my $placeholders='?,' x (@{$fids2externalIds->{$fid}});
@@ -759,6 +763,7 @@ sub fids_to_ec
 		foreach my $fid (keys %$fids2externalIds)
 		{
 			$return->{$fid} = [];
+
 			my $ecSql='SELECT DISTINCT locusId,ecNum FROM Locus2Ec WHERE
 				locusId = ?';
 #			my $placeholders='?,' x (@{$fids2externalIds->{$fid}});
@@ -861,6 +866,8 @@ sub fids_to_go
 		# this is not the best way, but should work
 		foreach my $fid (keys %$fids2externalIds)
 		{
+			$return->{$fid] = [];
+
 			my $goSql='SELECT DISTINCT locusId,acc FROM Locus2Go l2g
 		       		JOIN term t ON (t.id=l2g.goId)
 				WHERE locusId = ?';
