@@ -74,7 +74,7 @@ sub new
 	my $sock_dev='';
 	# use keith's dev instance for both db handles
         my $dbKernel = DBKernel->new($dbms_dev, $dbName_dev, $user_dev, $pass_dev, $port_dev, $dbhost_dev, $sock_dev);
-        my $moDbh=$dbKernel_dev->{_dbh};
+        my $moDbh=$dbKernel->{_dbh};
         my $dbKernel_dev = DBKernel->new($dbms_dev, $dbName_dev, $user_dev, $pass_dev, $port_dev, $dbhost_dev, $sock_dev);
         my $moDbh_dev=$dbKernel_dev->{_dbh};
         my $gene_dbh = Bio::KBase::ProteinInfoService::Browser::DB::dbConnect($dbhost_dev,$user_dev,$pass_dev,$dbName_dev);
