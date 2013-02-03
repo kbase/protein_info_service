@@ -866,7 +866,7 @@ sub fids_to_go
 		# this is not the best way, but should work
 		foreach my $fid (keys %$fids2externalIds)
 		{
-			$return->{$fid] = [];
+			$return->{$fid} = [];
 
 			my $goSql='SELECT DISTINCT locusId,acc FROM Locus2Go l2g
 		       		JOIN term t ON (t.id=l2g.goId)
