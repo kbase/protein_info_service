@@ -48,7 +48,7 @@ compile-typespec:
 		--js javascript/$(SERVICE_NAME)/Client \
 		--scripts scripts \
 		$(SERVICE_NAME).spec lib
-	rm -r Bio # For some strange reason, compile_typespec always creates this directory in the root dir!
+#	rm -r Bio # For some strange reason, compile_typespec always creates this directory in the root dir!
 
 build-docs: compile-typespec
 	mkdir -p docs
