@@ -110,6 +110,7 @@ deploy-service: compile-typespec deploy-server-libs deploy-server-scripts
 
 deploy-server-libs:
 	mkdir -p $(TARGET)/lib/Bio/KBase/$(SERVICE_NAME)
+	mkdir -p $(TARGET)/lib/Bio/KBase/$(SERVICE_NAME)/Browser
 	cp lib/Bio/KBase/$(SERVICE_NAME)/Service.pm $(TARGET)/lib/Bio/KBase/$(SERVICE_NAME)/.
 	cp lib/Bio/KBase/$(SERVICE_NAME)/ACL.pm $(TARGET)/lib/Bio/KBase/$(SERVICE_NAME)/.
 	cp lib/Bio/KBase/$(SERVICE_NAME)/Description.pm $(TARGET)/lib/Bio/KBase/$(SERVICE_NAME)/.
@@ -119,6 +120,7 @@ deploy-server-libs:
 	cp lib/Bio/KBase/$(SERVICE_NAME)/Regulon.pm $(TARGET)/lib/Bio/KBase/$(SERVICE_NAME)/.
 	cp lib/Bio/KBase/$(SERVICE_NAME)/Scaffold.pm $(TARGET)/lib/Bio/KBase/$(SERVICE_NAME)/.
 	cp lib/Bio/KBase/$(SERVICE_NAME)/Vector.pm $(TARGET)/lib/Bio/KBase/$(SERVICE_NAME)/.
+	cp lib/Bio/KBase/$(SERVICE_NAME)/Browser/*.pm $(TARGET)/lib/Bio/KBase/$(SERVICE_NAME)/Browser/.
 	cp $(TOP_DIR)/modules/$(SERVICE)/lib/Bio/KBase/$(SERVICE_NAME)/Impl.pm $(TARGET)/lib/Bio/KBase/$(SERVICE_NAME)/.
 # no Util.pm file
 #	cp $(TOP_DIR)/modules/$(SERVICE)/lib/Bio/KBase/$(SERVICE_NAME)/Util.pm $(TARGET)/lib/Bio/KBase/$(SERVICE_NAME)/.
