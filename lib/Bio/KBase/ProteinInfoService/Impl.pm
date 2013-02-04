@@ -49,7 +49,7 @@ sub new
 	# this is the production instance
 	#my $kbMOT = Bio::KBase::MOTranslationService::Client->new('http://kbase.us/services/translation');
 	# this is a test instance
-	my $kbMOT = Bio::KBase::MOTranslationService::Client->new('http://140.221.92.231/services/translation');
+	my $kbMOT = Bio::KBase::MOTranslationService::Client->new('http://140.221.84.191/services/translation');
 #	my $moDbh=DBI->connect("DBI:mysql:genomics:db1.chicago.kbase.us",'genomics');
 
         # Need to initialize the database handler for that Bio::KBase::ProteinInfoService::Gene depends on
