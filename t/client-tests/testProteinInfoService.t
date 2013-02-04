@@ -148,7 +148,7 @@ foreach my $call (@methodCalls) {
 	## 1. Test if we got a result of any kind from the method call.
 	ok($result, "Got a response from \"$call\" with happy data");
 	$num_tests++;	
-	warn Dumper($result);
+#	warn Dumper($result);
 	# this works because we're only passing an array ref for each method,
 	# so don't copy this bit to other modules...
 
@@ -206,7 +206,7 @@ foreach my $call (@methodCalls) {
 	}
 	if ($@) { print "ERROR = $@\n"; }
 	ok($result, "Got a response from \"$call\" with empty input");
-	warn Dumper($result);
+#	warn Dumper($result);
 	$num_tests++;
 
 	## 6. Test with bad (but correctly formatted) data.
@@ -217,7 +217,7 @@ note("test $num_tests and method $method_calls\n");
 		eval { $result = $client->$call($method_calls->{$call}->{bad},@{$method_calls->{$call}->{opts}}); }
 	}
 	if ($@) { print "ERROR = $@\n"; }
-	warn Dumper($result);
+#	warn Dumper($result);
 	ok($result, "Got a response from \"$call\" with bad input");
 	$num_tests++;
 }
