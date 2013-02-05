@@ -23,7 +23,7 @@ use LWP::UserAgent;
 use JSON;
 
 use Bio::KBase;
-use Bio::KBase::MOTranslationService::Client;
+use Bio::KBase::MOTranslationService::Impl;
 use DBKernel;
 
 # This use statement drags in a whole boatload of MO stuff along with
@@ -49,7 +49,7 @@ sub new
 	# this is the production instance
 	#my $kbMOT = Bio::KBase::MOTranslationService::Client->new('http://kbase.us/services/translation');
 	# this is a test instance
-	my $kbMOT = Bio::KBase::MOTranslationService::Client->new('http://140.221.92.231/services/translation');
+	my $kbMOT = Bio::KBase::MOTranslationService::Impl->new();;
 #	my $moDbh=DBI->connect("DBI:mysql:genomics:db1.chicago.kbase.us",'genomics');
 
         # Need to initialize the database handler for that Bio::KBase::ProteinInfoService::Gene depends on
@@ -647,33 +647,36 @@ sub fids_to_orthologs
     #BEGIN fids_to_orthologs
 
     $return={};
-    my $ua = LWP::UserAgent->new;
     my $kbMOT=$self->{kbMOT};
-
     my $fids2externalIds=$kbMOT->fids_to_moLocusIds($fids);
+    my $return_temp;
 
     foreach my $fid (keys %$fids2externalIds) {
 	# run the orthologs query for every locusId that was returned for the fid
 	foreach my $locusId ( @{$fids2externalIds->{$fid}}) {
 	    my $gene = Bio::KBase::ProteinInfoService::Gene::new( locusId => $locusId);
 	    my $moOrthologList = $gene->getOrthologListRef();
-	    my @moOrthologArray = map { $_->{'locusId_'} } @$moOrthologList;
-	    my $moOrthologs = \@moOrthologArray;
-	    my $moOrthologs2fids=$kbMOT->moLocusIds_to_fids($moOrthologs);
-	    
-	    my %kbOrthologs;
-	    foreach my $moOrthLocusId (keys %$moOrthologs2fids)
-	    {
-		next unless ref $moOrthologs2fids->{$moOrthLocusId};
-		foreach my $orthFid (@{$moOrthologs2fids->{$moOrthLocusId}})
-		{
-		    $kbOrthologs{$orthFid}=1;
-		}
+            $return_temp->{$fid} = {} unless defined( $return_temp->{$fid});
+            foreach my $ortholog (@$moOrthologList) {
+		$return_temp->{$fid}->{$ortholog->{'locusId_'}} = undef; # Create hash entry with undef placeholder
 	    }
-	    $return->{$fid} = [] unless defined( $return->{$fid});
-	    push @{$return->{$fid}}, keys %kbOrthologs;
+
 	}
     }
+
+    my %moOrthologList;
+    @moOrthologList{ map { keys %{$return_temp->{$_}}}  keys %$return_temp } = undef;
+    my @OrthologList = keys %moOrthologList;
+    my $moOrthologs2fids=$kbMOT->moLocusIds_to_fids( \@OrthologList);
+    foreach my $fid ( keys %$return_temp ) {
+	my %kbOrthologs;
+	foreach my $ortholog ( map { @{$moOrthologs2fids-> {$_}} } keys %{$return_temp->{$fid}} ) {
+	    $kbOrthologs{$ortholog} = undef;
+	}
+	$return->{$fid} = [];
+	push @{$return->{$fid}}, keys %kbOrthologs;
+    }
+		     
 
     #END fids_to_orthologs
     my @_bad_returns;
