@@ -46,11 +46,9 @@ sub new
 	my $kb = Bio::KBase->new();
 #	my $kbIdServer = $kb->id_server();
 	my $kbCDM = $kb->central_store;
-	# this is the production instance
-	#my $kbMOT = Bio::KBase::MOTranslationService::Client->new('http://kbase.us/services/translation');
-	# this is a test instance
+	# Load the translation service implementation directly to avoid timeouts and overhead from
+        # rpc transport
 	my $kbMOT = Bio::KBase::MOTranslationService::Impl->new();;
-#	my $moDbh=DBI->connect("DBI:mysql:genomics:db1.chicago.kbase.us",'genomics');
 
         # Need to initialize the database handler for that Bio::KBase::ProteinInfoService::Gene depends on
         # the GenomicsUtils module caches the database handle internally
@@ -61,8 +59,6 @@ sub new
 	my $port=3306;
 	my $dbhost='db1.chicago.kbase.us';
 	my $sock='';
-#	my $dbKernel = DBKernel->new($dbms, $dbName, $user, $pass, $port, $dbhost, $sock);
-#	my $moDbh=$dbKernel->{_dbh};
         # we currently have 2 databases in play, this is a connection to the test database
         # on Keith's dev instance
 	my $dbms_dev='mysql';
