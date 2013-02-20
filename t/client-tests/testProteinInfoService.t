@@ -67,12 +67,14 @@ my @good_fids = qw(
 kb|g.3405.peg.674
 kb|g.1084.peg.101
 kb|g.1870.peg.3069
-kb|g.357.peg.3639
 );
 # this peg may cause problems with methods that query lots of rows
 #kb|g.357.peg.3639
 # this is a ''new'' gene that was not in MO before
 #kb|g.3405.peg.674
+# two random fids
+#kb|g.1084.peg.101
+#kb|g.1870.peg.3069
   
 
 my @empty_fids = qw();
