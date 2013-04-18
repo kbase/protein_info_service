@@ -28,6 +28,7 @@ in other genomes, and operons.
 sub new
 {
     my($class, $url, @args) = @_;
+    
 
     my $self = {
 	client => Bio::KBase::ProteinInfoService::Client::RpcClient->new,
@@ -221,6 +222,110 @@ sub fids_to_domains
 
 
 
+=head2 fids_to_domain_hits
+
+  $return = $obj->fids_to_domain_hits($fids)
+
+=over 4
+
+=item Parameter and return types
+
+=begin html
+
+<pre>
+$fids is a reference to a list where each element is a fid
+$return is a reference to a hash where the key is a fid and the value is a reference to a list where each element is a hit
+fid is a string
+hit is a reference to a hash where the following keys are defined:
+	id has a value which is a string
+	subjectDb has a value which is a string
+	description has a value which is a string
+	queryBegin has a value which is an int
+	queryEnd has a value which is an int
+	subjectBegin has a value which is an int
+	subjectEnd has a value which is an int
+	score has a value which is a float
+	evalue has a value which is a float
+
+</pre>
+
+=end html
+
+=begin text
+
+$fids is a reference to a list where each element is a fid
+$return is a reference to a hash where the key is a fid and the value is a reference to a list where each element is a hit
+fid is a string
+hit is a reference to a hash where the following keys are defined:
+	id has a value which is a string
+	subjectDb has a value which is a string
+	description has a value which is a string
+	queryBegin has a value which is an int
+	queryEnd has a value which is an int
+	subjectBegin has a value which is an int
+	subjectEnd has a value which is an int
+	score has a value which is a float
+	evalue has a value which is a float
+
+
+=end text
+
+=item Description
+
+fids_to_domain_hits takes as input a list of feature ids, and
+returns a mapping of each fid to a list of hits. (This includes COG,
+even though COG is not part of InterProScan.)
+
+=back
+
+=cut
+
+sub fids_to_domain_hits
+{
+    my($self, @args) = @_;
+
+# Authentication: none
+
+    if ((my $n = @args) != 1)
+    {
+	Bio::KBase::Exceptions::ArgumentValidationError->throw(error =>
+							       "Invalid argument count for function fids_to_domain_hits (received $n, expecting 1)");
+    }
+    {
+	my($fids) = @args;
+
+	my @_bad_arguments;
+        (ref($fids) eq 'ARRAY') or push(@_bad_arguments, "Invalid type for argument 1 \"fids\" (value was \"$fids\")");
+        if (@_bad_arguments) {
+	    my $msg = "Invalid arguments passed to fids_to_domain_hits:\n" . join("", map { "\t$_\n" } @_bad_arguments);
+	    Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
+								   method_name => 'fids_to_domain_hits');
+	}
+    }
+
+    my $result = $self->{client}->call($self->{url}, {
+	method => "ProteinInfo.fids_to_domain_hits",
+	params => \@args,
+    });
+    if ($result) {
+	if ($result->is_error) {
+	    Bio::KBase::Exceptions::JSONRPC->throw(error => $result->error_message,
+					       code => $result->content->{code},
+					       method_name => 'fids_to_domain_hits',
+					      );
+	} else {
+	    return wantarray ? @{$result->result} : $result->result->[0];
+	}
+    } else {
+        Bio::KBase::Exceptions::HTTP->throw(error => "Error invoking method fids_to_domain_hits",
+					    status_line => $self->{client}->status_line,
+					    method_name => 'fids_to_domain_hits',
+				       );
+    }
+}
+
+
+
 =head2 domains_to_fids
 
   $return = $obj->domains_to_fids($domain_ids)
@@ -304,6 +409,93 @@ sub domains_to_fids
         Bio::KBase::Exceptions::HTTP->throw(error => "Error invoking method domains_to_fids",
 					    status_line => $self->{client}->status_line,
 					    method_name => 'domains_to_fids',
+				       );
+    }
+}
+
+
+
+=head2 domains_to_domain_annotations
+
+  $return = $obj->domains_to_domain_annotations($domain_ids)
+
+=over 4
+
+=item Parameter and return types
+
+=begin html
+
+<pre>
+$domain_ids is a domains
+$return is a reference to a hash where the key is a domain_id and the value is a string
+domains is a reference to a list where each element is a string
+domain_id is a string
+
+</pre>
+
+=end html
+
+=begin text
+
+$domain_ids is a domains
+$return is a reference to a hash where the key is a domain_id and the value is a string
+domains is a reference to a list where each element is a string
+domain_id is a string
+
+
+=end text
+
+=item Description
+
+domains_to_domain_annotations takes as input a list of domain_ids, and
+returns a mapping of each domain_id to its text annotation as provided
+by its maintainer (usually retrieved from InterProScan, or from NCBI
+for COG).
+
+=back
+
+=cut
+
+sub domains_to_domain_annotations
+{
+    my($self, @args) = @_;
+
+# Authentication: none
+
+    if ((my $n = @args) != 1)
+    {
+	Bio::KBase::Exceptions::ArgumentValidationError->throw(error =>
+							       "Invalid argument count for function domains_to_domain_annotations (received $n, expecting 1)");
+    }
+    {
+	my($domain_ids) = @args;
+
+	my @_bad_arguments;
+        (ref($domain_ids) eq 'ARRAY') or push(@_bad_arguments, "Invalid type for argument 1 \"domain_ids\" (value was \"$domain_ids\")");
+        if (@_bad_arguments) {
+	    my $msg = "Invalid arguments passed to domains_to_domain_annotations:\n" . join("", map { "\t$_\n" } @_bad_arguments);
+	    Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
+								   method_name => 'domains_to_domain_annotations');
+	}
+    }
+
+    my $result = $self->{client}->call($self->{url}, {
+	method => "ProteinInfo.domains_to_domain_annotations",
+	params => \@args,
+    });
+    if ($result) {
+	if ($result->is_error) {
+	    Bio::KBase::Exceptions::JSONRPC->throw(error => $result->error_message,
+					       code => $result->content->{code},
+					       method_name => 'domains_to_domain_annotations',
+					      );
+	} else {
+	    return wantarray ? @{$result->result} : $result->result->[0];
+	}
+    } else {
+        Bio::KBase::Exceptions::HTTP->throw(error => "Error invoking method domains_to_domain_annotations",
+					    status_line => $self->{client}->status_line,
+					    method_name => 'domains_to_domain_annotations',
 				       );
     }
 }
@@ -1045,6 +1237,68 @@ a reference to a list where each element is a string
 =begin text
 
 a reference to a list where each element is a string
+
+=end text
+
+=back
+
+
+
+=head2 hit
+
+=over 4
+
+
+
+=item Description
+
+A hit is a description of a match to another object (a fid,
+a gene family, an HMM).  It is a structure with the following
+fields:
+        id: the common identifier of the object (e.g., a fid, an HMM accession)
+        subjectDb: the source database of the original hit (e.g., KBase for fids, TIGRFam, Pfam, COG)
+        description: a human-readable textual description of the object (might be empty)
+        queryBegin: the start of the hit in the input gene sequence
+        queryEnd: the end of the hit in the input gene sequence
+        subjectBegin: the start of the hit in the object gene sequence
+        subjectEnd: the end of the hit in the object gene sequence
+        score: the score (if provided) of the hit to the object
+        evalue: the evalue (if provided) of the hit to the object
+
+
+=item Definition
+
+=begin html
+
+<pre>
+a reference to a hash where the following keys are defined:
+id has a value which is a string
+subjectDb has a value which is a string
+description has a value which is a string
+queryBegin has a value which is an int
+queryEnd has a value which is an int
+subjectBegin has a value which is an int
+subjectEnd has a value which is an int
+score has a value which is a float
+evalue has a value which is a float
+
+</pre>
+
+=end html
+
+=begin text
+
+a reference to a hash where the following keys are defined:
+id has a value which is a string
+subjectDb has a value which is a string
+description has a value which is a string
+queryBegin has a value which is an int
+queryEnd has a value which is an int
+subjectBegin has a value which is an int
+subjectEnd has a value which is an int
+score has a value which is a float
+evalue has a value which is a float
+
 
 =end text
 

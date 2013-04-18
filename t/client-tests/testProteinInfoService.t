@@ -25,8 +25,8 @@ use lib "t/client-tests";
 my $num_tests = 0;
 my $debug=0;
 my $localServer=0;
-#my $uri='http://140.221.92.231/services/protein_info_service';
 my $uri='http://kbase.us/services/protein_info_service';
+#$uri='http://localhost:7057';
 my $serviceName='ProteinInfoService';
 
 my $getoptResult=GetOptions(
@@ -107,7 +107,17 @@ my $method_calls = {
                 empty => \@empty_fids,
                 bad => \@bad_fids
         },
+	fids_to_domain_hits => {
+                happy => \@good_fids,
+                empty => \@empty_fids,
+                bad => \@bad_fids
+        },
 	domains_to_fids => {
+                happy => \@good_domains,
+                empty => \@empty_domains,
+                bad => \@bad_domains
+        },
+	domains_to_domain_annotations => {
                 happy => \@good_domains,
                 empty => \@empty_domains,
                 bad => \@bad_domains
@@ -134,8 +144,12 @@ my $method_calls = {
         },
 };
 
-my @methodCalls=qw(fids_to_orthologs fids_to_operons fids_to_ipr fids_to_ec fids_to_go domains_to_fids fids_to_domains fidlist_to_neighbors fid_to_neighbors);
+my @methodCalls=sort keys %{$method_calls};
+# can manually specify @methodCalls to help debugging tests
+#@methodCalls=qw(fids_to_orthologs fids_to_operons fids_to_ipr fids_to_ec fids_to_go domains_to_fids fids_to_domains fidlist_to_neighbors fid_to_neighbors);
 #@methodCalls=qw(fid_to_neighbors fidlist_to_neighbors);
+#@methodCalls=qw(fids_to_orthologs);
+#@methodCalls=qw(domains_to_domain_annotations);
 
 foreach my $call (@methodCalls) {
 	my $result;
@@ -182,7 +196,8 @@ foreach my $call (@methodCalls) {
 		# Perl - the write-only language, at work.
 		# kkeller: only need to check for arrayrefs
 		# if hashref, by definition keys are unique
-		if (ref $result->{$key} eq 'HASH')
+		# if not a reference, then it's just a value
+		if (ref $result->{$key} eq 'HASH' or !(ref $result->{$key}))
 		{
 			$num_uniq_results++;
 			next;
@@ -196,7 +211,7 @@ foreach my $call (@methodCalls) {
 	}
 	if (ref $method_calls->{$call}->{happy} eq 'ARRAY')
 	{
-		ok($num_uniq_results == scalar(keys(%{ $result })), "\"$call\" returned unique sets of results");
+		ok($num_uniq_results == scalar(keys(%{ $result })), "\"$call\" returned unique sets of results (num uniq results = $num_uniq_results)");
 		$num_tests++;
 	}
 

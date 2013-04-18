@@ -21,6 +21,7 @@ in other genomes, and operons.
 
 use LWP::UserAgent;
 use JSON;
+use Data::Dumper;
 
 use Bio::KBase;
 use Bio::KBase::MOTranslationService::Impl;
@@ -48,7 +49,7 @@ sub new
 	my $kbCDM = $kb->central_store;
 	# Load the translation service implementation directly to avoid timeouts and overhead from
         # rpc transport
-	my $kbMOT = Bio::KBase::MOTranslationService::Impl->new();;
+	my $kbMOT = Bio::KBase::MOTranslationService::Impl->new();
 
         # Need to initialize the database handler for that Bio::KBase::ProteinInfoService::Gene depends on
         # the GenomicsUtils module caches the database handle internally
@@ -171,6 +172,8 @@ sub fids_to_operons
 		my $operons={};
 		foreach my $kbId (keys %$externalIds)
 		{
+			# to do: would like to reduce the number of locusIds being
+			# passed to this query
 			my $placeholders='?,' x (scalar @{$externalIds->{$kbId}});
 			chop $placeholders;
 			my $operonSql="SELECT o2.locusId
@@ -197,6 +200,7 @@ sub fids_to_operons
 			# different genomes
 			foreach my $moOperonId (keys %$moOperonIds_to_kbaseIds)
 			{
+				next unless ($moOperonIds_to_kbaseIds->{$moOperonId} and scalar @{$moOperonIds_to_kbaseIds->{$moOperonId}});
 				my $operonGenomes=$kbCDM->fids_to_genomes($moOperonIds_to_kbaseIds->{$moOperonId});
 				foreach my $kbOperonId (keys %$operonGenomes)
 				{
@@ -344,6 +348,166 @@ sub fids_to_domains
 
 
 
+=head2 fids_to_domain_hits
+
+  $return = $obj->fids_to_domain_hits($fids)
+
+=over 4
+
+=item Parameter and return types
+
+=begin html
+
+<pre>
+$fids is a reference to a list where each element is a fid
+$return is a reference to a hash where the key is a fid and the value is a reference to a list where each element is a hit
+fid is a string
+hit is a reference to a hash where the following keys are defined:
+	id has a value which is a string
+	subjectDb has a value which is a string
+	description has a value which is a string
+	queryBegin has a value which is an int
+	queryEnd has a value which is an int
+	subjectBegin has a value which is an int
+	subjectEnd has a value which is an int
+	score has a value which is a float
+	evalue has a value which is a float
+
+</pre>
+
+=end html
+
+=begin text
+
+$fids is a reference to a list where each element is a fid
+$return is a reference to a hash where the key is a fid and the value is a reference to a list where each element is a hit
+fid is a string
+hit is a reference to a hash where the following keys are defined:
+	id has a value which is a string
+	subjectDb has a value which is a string
+	description has a value which is a string
+	queryBegin has a value which is an int
+	queryEnd has a value which is an int
+	subjectBegin has a value which is an int
+	subjectEnd has a value which is an int
+	score has a value which is a float
+	evalue has a value which is a float
+
+
+=end text
+
+
+
+=item Description
+
+fids_to_domain_hits takes as input a list of feature ids, and
+returns a mapping of each fid to a list of hits. (This includes COG,
+even though COG is not part of InterProScan.)
+
+=back
+
+=cut
+
+sub fids_to_domain_hits
+{
+    my $self = shift;
+    my($fids) = @_;
+
+    my @_bad_arguments;
+    (ref($fids) eq 'ARRAY') or push(@_bad_arguments, "Invalid type for argument \"fids\" (value was \"$fids\")");
+    if (@_bad_arguments) {
+	my $msg = "Invalid arguments passed to fids_to_domain_hits:\n" . join("", map { "\t$_\n" } @_bad_arguments);
+	Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
+							       method_name => 'fids_to_domain_hits');
+    }
+
+    my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
+    my($return);
+    #BEGIN fids_to_domain_hits
+
+	$return={};
+
+	if (scalar @$fids)
+	{
+#		my $ctxA = ContextAdapter->new($ctx);
+#		my $user_token = $ctxA->user_token();
+
+		my $moDbh=$self->{moDbh};
+		my $kbMOT=$self->{kbMOT};
+
+		my $fids2externalIds=$kbMOT->fids_to_moLocusIds($fids);
+
+		# this is not the best way, but should work
+		foreach my $fid (keys %$fids2externalIds)
+		{
+			my $domainSql='SELECT locusId,domainId,domainName,iprName,seqBegin,seqEnd,domainBegin,domainEnd,score,evalue,domainDb FROM Locus2Domain LEFT JOIN DomainInfo USING (domainId) WHERE
+				locusId = ?';
+#			my $placeholders='?,' x (@{$fids2externalIds->{$fid}});
+#			chop $placeholders;
+#			$sql.=$placeholders.')';
+		
+			my $domainSth=$moDbh->prepare($domainSql);
+			$domainSth->execute($fids2externalIds->{$fid}[0]);
+
+			my $hits=[];
+
+			while (my $row=$domainSth->fetch)
+			{
+				# one of the DBI convenience methods
+				# would be more readable here
+				push @$hits, {
+					id	=>	$row->[1],
+					description	=>	$row->[2] . ' ' . $row->[3],
+					queryBegin	=>	$row->[4],
+					queryEnd	=>	$row->[5],
+					subjectBegin	=>	$row->[6],
+					subjectEnd	=>	$row->[7],
+					score	=>	$row->[8],
+					evalue	=>	$row->[9],
+					subjectDb	=>	$row->[10],
+				};
+			}
+
+			my $cogSql='select c.locusId, CONCAT("COG",c.cogInfoId),geneName,description,qBegin,qEnd,sBegin,sEnd,score,evalue,"COG" from COG c join COGrpsblast rps ON (c.locusId=rps.locusId and c.version=rps.version and c.cogInfoId=rps.subject) JOIN COGInfo ci ON (c.cogInfoId=ci.cogInfoId) WHERE c.locusId=?';
+		
+			my $cogSth=$moDbh->prepare($cogSql);
+			$cogSth->execute($fids2externalIds->{$fid}[0]);
+			while (my $row=$cogSth->fetch)
+			{
+				# one of the DBI convenience methods
+				# would be more readable here
+				push @$hits, {
+					id	=>	$row->[1],
+					description	=>	$row->[2] . ' ' . $row->[3],
+					queryBegin	=>	$row->[4],
+					queryEnd	=>	$row->[5],
+					subjectBegin	=>	$row->[6],
+					subjectEnd	=>	$row->[7],
+					score	=>	$row->[8],
+					evalue	=>	$row->[9],
+					subjectDb	=>	$row->[10],
+				};
+			}
+
+			$return->{$fid}=$hits;
+
+		}
+	}
+
+    #END fids_to_domain_hits
+    my @_bad_returns;
+    (ref($return) eq 'HASH') or push(@_bad_returns, "Invalid type for return variable \"return\" (value was \"$return\")");
+    if (@_bad_returns) {
+	my $msg = "Invalid returns passed to fids_to_domain_hits:\n" . join("", map { "\t$_\n" } @_bad_returns);
+	Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
+							       method_name => 'fids_to_domain_hits');
+    }
+    return($return);
+}
+
+
+
+
 =head2 domains_to_fids
 
   $return = $obj->domains_to_fids($domain_ids)
@@ -471,6 +635,118 @@ sub domains_to_fids
 	my $msg = "Invalid returns passed to domains_to_fids:\n" . join("", map { "\t$_\n" } @_bad_returns);
 	Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
 							       method_name => 'domains_to_fids');
+    }
+    return($return);
+}
+
+
+
+
+=head2 domains_to_domain_annotations
+
+  $return = $obj->domains_to_domain_annotations($domain_ids)
+
+=over 4
+
+=item Parameter and return types
+
+=begin html
+
+<pre>
+$domain_ids is a domains
+$return is a reference to a hash where the key is a domain_id and the value is a string
+domains is a reference to a list where each element is a string
+domain_id is a string
+
+</pre>
+
+=end html
+
+=begin text
+
+$domain_ids is a domains
+$return is a reference to a hash where the key is a domain_id and the value is a string
+domains is a reference to a list where each element is a string
+domain_id is a string
+
+
+=end text
+
+
+
+=item Description
+
+domains_to_domain_annotations takes as input a list of domain_ids, and
+returns a mapping of each domain_id to its text annotation as provided
+by its maintainer (usually retrieved from InterProScan, or from NCBI
+for COG).
+
+=back
+
+=cut
+
+sub domains_to_domain_annotations
+{
+    my $self = shift;
+    my($domain_ids) = @_;
+
+    my @_bad_arguments;
+    (ref($domain_ids) eq 'ARRAY') or push(@_bad_arguments, "Invalid type for argument \"domain_ids\" (value was \"$domain_ids\")");
+    if (@_bad_arguments) {
+	my $msg = "Invalid arguments passed to domains_to_domain_annotations:\n" . join("", map { "\t$_\n" } @_bad_arguments);
+	Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
+							       method_name => 'domains_to_domain_annotations');
+    }
+
+    my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
+    my($return);
+    #BEGIN domains_to_domain_annotations
+
+	$return={};
+	
+	my $moDbh=$self->{moDbh};
+	my $kbMOT=$self->{kbMOT};
+
+	if (scalar @$domain_ids)
+	{
+		foreach my $domainId (@$domain_ids)
+		{
+			$return->{$domainId}='(no description available)';
+			my $domainSql='SELECT domainName,iprName FROM DomainInfo WHERE
+				domainId = ?';
+		
+			my $domainSth=$moDbh->prepare($domainSql);
+			$domainSth->execute($domainId);
+			while (my $row=$domainSth->fetch)
+			{
+				$return->{$domainId} = $row->[0];
+				$return->{$domainId} .=  ' ' . $row->[1] if ($row->[1] and $row->[1] ne 'NULL');
+			}
+
+			my ($cogInfoId)=$domainId=~/^COG(\d+)$/;
+			if ($cogInfoId)
+			{
+				my $cogSql='SELECT geneName, description, funCode FROM COGInfo WHERE
+					cogInfoId = ?';
+		
+				my $cogSth=$moDbh->prepare($cogSql);
+
+				$cogSth->execute($cogInfoId);
+				while (my $row=$cogSth->fetch)
+				{
+					$return->{$domainId} = $row->[0] . ' ' . $row->[1] . ' (category ' . $row->[2] . ')';
+				}
+			}
+		}
+	}
+
+    #END domains_to_domain_annotations
+    my @_bad_returns;
+    (ref($return) eq 'HASH') or push(@_bad_returns, "Invalid type for return variable \"return\" (value was \"$return\")");
+    if (@_bad_returns) {
+	my $msg = "Invalid returns passed to domains_to_domain_annotations:\n" . join("", map { "\t$_\n" } @_bad_returns);
+	Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
+							       method_name => 'domains_to_domain_annotations');
     }
     return($return);
 }
@@ -644,6 +920,11 @@ sub fids_to_orthologs
 
     $return={};
     my $kbMOT=$self->{kbMOT};
+    my $moDbh=$self->{moDbh};
+    # very crude hack to bypass bad MO dbh-management code
+    @Bio::KBase::ProteinInfoService::Browser::DB::dbhStack=({user=>'kbase_dummy',dbh=>$moDbh});
+    warn Dumper($fids);
+    warn Dumper(@Bio::KBase::ProteinInfoService::Browser::DB::dbhStack);
     my $fids2externalIds=$kbMOT->fids_to_moLocusIds($fids);
     my $return_temp;
 
@@ -1293,6 +1574,68 @@ a reference to a list where each element is a string
 =begin text
 
 a reference to a list where each element is a string
+
+=end text
+
+=back
+
+
+
+=head2 hit
+
+=over 4
+
+
+
+=item Description
+
+A hit is a description of a match to another object (a fid,
+a gene family, an HMM).  It is a structure with the following
+fields:
+        id: the common identifier of the object (e.g., a fid, an HMM accession)
+        subjectDb: the source database of the original hit (e.g., KBase for fids, TIGRFam, Pfam, COG)
+        description: a human-readable textual description of the object (might be empty)
+        queryBegin: the start of the hit in the input gene sequence
+        queryEnd: the end of the hit in the input gene sequence
+        subjectBegin: the start of the hit in the object gene sequence
+        subjectEnd: the end of the hit in the object gene sequence
+        score: the score (if provided) of the hit to the object
+        evalue: the evalue (if provided) of the hit to the object
+
+
+=item Definition
+
+=begin html
+
+<pre>
+a reference to a hash where the following keys are defined:
+id has a value which is a string
+subjectDb has a value which is a string
+description has a value which is a string
+queryBegin has a value which is an int
+queryEnd has a value which is an int
+subjectBegin has a value which is an int
+subjectEnd has a value which is an int
+score has a value which is a float
+evalue has a value which is a float
+
+</pre>
+
+=end html
+
+=begin text
+
+a reference to a hash where the following keys are defined:
+id has a value which is a string
+subjectDb has a value which is a string
+description has a value which is a string
+queryBegin has a value which is an int
+queryEnd has a value which is an int
+subjectBegin has a value which is an int
+subjectEnd has a value which is an int
+score has a value which is a float
+evalue has a value which is a float
+
 
 =end text
 
