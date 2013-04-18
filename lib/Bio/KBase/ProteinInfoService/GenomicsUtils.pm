@@ -197,6 +197,7 @@ sub disconnect(){
 
 sub query($@){
     my $temp_dbh = Bio::KBase::ProteinInfoService::Browser::DB::dbHandle();
+#    CORE::warn "temp_dbh is $temp_dbh";
     my $temp_statement = shift;
 	my @temp_query_args = @_;
 

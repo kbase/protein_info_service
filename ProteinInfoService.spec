@@ -21,7 +21,6 @@ module ProteinInfo {
 	*/
 	typedef string domain_id;
 
-
 	/*
 	A neighbor_threshold is a floating point number indicating a bound
 	for the neighbor score */
@@ -36,6 +35,22 @@ module ProteinInfo {
 	Domains are a list of domain_ids.
 	*/
 	typedef list<string> domains;
+
+        /*
+        A hit is a description of a match to another object (a fid,
+        a gene family, an HMM).  It is a structure with the following
+        fields:
+                id: the common identifier of the object (e.g., a fid, an HMM accession)
+		subjectDb: the source database of the original hit (e.g., KBase for fids, TIGRFam, Pfam, COG)
+                description: a human-readable textual description of the object (might be empty)
+                queryBegin: the start of the hit in the input gene sequence
+                queryEnd: the end of the hit in the input gene sequence
+                subjectBegin: the start of the hit in the object gene sequence
+                subjectEnd: the end of the hit in the object gene sequence
+                score: the score (if provided) of the hit to the object
+                evalue: the evalue (if provided) of the hit to the object
+        */
+        typedef structure { string id; string subjectDb; string description; int queryBegin; int queryEnd; int subjectBegin; int subjectEnd; float score; float evalue; } hit;
 
 	/*
 	ECs are a list of Enzyme Commission identifiers.
@@ -82,6 +97,13 @@ module ProteinInfo {
 	*/
 	funcdef fids_to_domains (list<fid> fids) returns (mapping<fid, domains>);
 
+        /*
+        fids_to_domain_hits takes as input a list of feature ids, and
+        returns a mapping of each fid to a list of hits. (This includes COG,
+        even though COG is not part of InterProScan.)
+        */
+        funcdef fids_to_domain_hits (list<fid> fids) returns (mapping<fid, list<hit>>);
+
 	/*
 	domains_to_fids takes as input a list of domain_ids, and
 	returns a mapping of each domain_id to the fids which have that
@@ -89,6 +111,14 @@ module ProteinInfo {
 	InterProScan.)
 	*/
 	funcdef domains_to_fids (domains domain_ids) returns (mapping<domain_id, list<fid>>);
+
+	/*
+	domains_to_domain_annotations takes as input a list of domain_ids, and
+	returns a mapping of each domain_id to its text annotation as provided
+	by its maintainer (usually retrieved from InterProScan, or from NCBI
+	for COG).
+	*/
+	funcdef domains_to_domain_annotations (domains domain_ids) returns (mapping<domain_id, string>);
 
 	/*
 	fids_to_ipr takes as input a list of feature ids, and returns
