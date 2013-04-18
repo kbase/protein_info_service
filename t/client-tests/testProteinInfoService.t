@@ -25,7 +25,7 @@ use lib "t/client-tests";
 my $num_tests = 0;
 my $debug=0;
 my $localServer=0;
-my $uri='http://kbase.us/services/protein_info_service';
+my $uri='http://kbase.us/services/protein_info';
 #$uri='http://localhost:7057';
 my $serviceName='ProteinInfoService';
 
