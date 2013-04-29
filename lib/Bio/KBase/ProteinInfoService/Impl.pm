@@ -62,14 +62,23 @@ sub new
 	my $sock='';
         # we currently have 2 databases in play, this is a connection to the test database
         # on Keith's dev instance
+#	my $dbms_dev='mysql';
+#	my $dbName_dev='***REMOVED***';
+#	my $user_dev='genomics';
+#	my $pass_dev=undef;
+#	my $port_dev=3306;
+#	my $dbhost_dev='140.221.84.194';
+#	my $sock_dev='';
+	# on devdb1.newyork
 	my $dbms_dev='mysql';
 	my $dbName_dev='***REMOVED***';
-	my $user_dev='genomics';
-	my $pass_dev=undef;
+	my $user_dev='***REMOVED***';
+	my $pass_dev='***REMOVED***';
 	my $port_dev=3306;
-	my $dbhost_dev='140.221.84.194';
+	my $dbhost_dev='***REMOVED***';
 	my $sock_dev='';
-	# use keith's dev instance for both db handles
+	
+	# use devdb1.newyork for both db handles
         my $dbKernel = DBKernel->new($dbms_dev, $dbName_dev, $user_dev, $pass_dev, $port_dev, $dbhost_dev, $sock_dev);
         my $moDbh=$dbKernel->{_dbh};
         my $dbKernel_dev = DBKernel->new($dbms_dev, $dbName_dev, $user_dev, $pass_dev, $port_dev, $dbhost_dev, $sock_dev);
