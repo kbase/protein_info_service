@@ -68,6 +68,11 @@ kb|g.3405.peg.674
 kb|g.1084.peg.101
 kb|g.1870.peg.3069
 );
+# fids_to_orthologs is horribly slow, so test only one fid
+my @good_ortholog_fids = qw(
+kb|g.3405.peg.674
+);
+
 # this peg may cause problems with methods that query lots of rows
 #kb|g.357.peg.3639
 # this is a ''new'' gene that was not in MO before
@@ -128,7 +133,7 @@ my $method_calls = {
                 bad => \@bad_fids
         },
 	fids_to_orthologs => {
-                happy => \@good_fids,
+                happy => \@good_ortholog_fids,
                 empty => \@empty_fids,
                 bad => \@bad_fids
         },
