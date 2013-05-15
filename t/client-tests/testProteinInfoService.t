@@ -69,6 +69,11 @@ kb|g.1870.peg.3069
 kb|g.1084.peg.101
 kb|g.357.peg.3639
 );
+# fids_to_orthologs is horribly slow, so test only one fid
+my @good_ortholog_fids=qw(
+kb|g.1084.peg.101
+);
+
 my @empty_fids = qw();
 my @bad_fids = qw(bad_fid this_is_bad_too);
 
@@ -98,7 +103,7 @@ my $method_calls = {
                 bad => \@bad_fids
         },
 	fids_to_orthologs => {
-                happy => \@good_fids,
+                happy => \@good_ortholog_fids,
                 empty => \@empty_fids,
                 bad => \@bad_fids
         },
