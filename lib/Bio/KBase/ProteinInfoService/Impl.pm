@@ -67,7 +67,7 @@ sub new
                 my $value = $config->param("$SERVICE.$param");
                 if ($value)
                 {
-                    $params{$p} = $v;
+                    $params{$param} = $value;
                 }
             }
 
