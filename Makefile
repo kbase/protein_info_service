@@ -122,6 +122,7 @@ deploy-server-libs:
 	cp lib/Bio/KBase/$(SERVICE_NAME)/Vector.pm $(TARGET)/lib/Bio/KBase/$(SERVICE_NAME)/.
 	cp lib/Bio/KBase/$(SERVICE_NAME)/Browser/*.pm $(TARGET)/lib/Bio/KBase/$(SERVICE_NAME)/Browser/.
 	cp $(TOP_DIR)/modules/$(SERVICE)/lib/Bio/KBase/$(SERVICE_NAME)/Impl.pm $(TARGET)/lib/Bio/KBase/$(SERVICE_NAME)/.
+	cat $(TOP_DIR)/deploy.cfg >> $(TARGET)/deployment.cfg
 # no Util.pm file
 #	cp $(TOP_DIR)/modules/$(SERVICE)/lib/Bio/KBase/$(SERVICE_NAME)/Util.pm $(TARGET)/lib/Bio/KBase/$(SERVICE_NAME)/.
 	cp $(TOP_DIR)/modules/$(SERVICE)/lib/$(SERVICE_PSGI_FILE) $(TARGET)/lib/.
@@ -134,6 +135,8 @@ deploy-server-scripts:
 	@echo '#!/bin/sh' > ./start_service
 	@echo "echo starting $(SERVICE) server." >> ./start_service
 	@echo 'export PERL5LIB=$$PERL5LIB:$(TARGET)/lib' >> ./start_service
+	@echo 'export KB_DEPLOYMENT_CONFIG=$(TARGET)/deployment.cfg' >> ./start_service
+	@echo 'export SERVICE=$(SERVICE)' >> ./start_service
 	@echo '#uncomment to debug: export STARMAN_DEBUG=1' >> ./start_service
 	@echo "$(DEPLOY_RUNTIME)/bin/starman --listen :$(SERVICE_PORT) --pid $(PID_FILE) --daemonize \\" >> ./start_service
 	@echo "  --access-log $(ACCESS_LOG_FILE) \\" >>./start_service
@@ -143,6 +146,8 @@ deploy-server-scripts:
 	# Second, create a debug start script that is not daemonized
 	@echo '#!/bin/sh' > ./debug_start_service
 	@echo 'export PERL5LIB=$$PERL5LIB:$(TARGET)/lib' >> ./debug_start_service
+	@echo 'export KB_DEPLOYMENT_CONFIG=$(TARGET)/deployment.cfg' >> ./debug_start_service
+	@echo 'export SERVICE=$(SERVICE)' >> ./debug_start_service
 	@echo 'export STARMAN_DEBUG=1' >> ./debug_start_service
 	@echo "$(DEPLOY_RUNTIME)/bin/starman --listen :$(SERVICE_PORT) --workers 1 \\" >> ./debug_start_service
 	@echo "    $(TARGET)/lib/$(SERVICE_PSGI_FILE)" >> ./debug_start_service
