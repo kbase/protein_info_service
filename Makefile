@@ -122,7 +122,7 @@ deploy-server-libs:
 	cp lib/Bio/KBase/$(SERVICE_NAME)/Vector.pm $(TARGET)/lib/Bio/KBase/$(SERVICE_NAME)/.
 	cp lib/Bio/KBase/$(SERVICE_NAME)/Browser/*.pm $(TARGET)/lib/Bio/KBase/$(SERVICE_NAME)/Browser/.
 	cp $(TOP_DIR)/modules/$(SERVICE)/lib/Bio/KBase/$(SERVICE_NAME)/Impl.pm $(TARGET)/lib/Bio/KBase/$(SERVICE_NAME)/.
-	cat $(TOP_DIR)/deploy.cfg >> $(TARGET)/deployment.cfg
+	cat deploy.cfg >> $(TARGET)/deployment.cfg
 # no Util.pm file
 #	cp $(TOP_DIR)/modules/$(SERVICE)/lib/Bio/KBase/$(SERVICE_NAME)/Util.pm $(TARGET)/lib/Bio/KBase/$(SERVICE_NAME)/.
 	cp $(TOP_DIR)/modules/$(SERVICE)/lib/$(SERVICE_PSGI_FILE) $(TARGET)/lib/.
