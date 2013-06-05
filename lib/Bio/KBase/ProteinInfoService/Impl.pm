@@ -22,6 +22,7 @@ in other genomes, and operons.
 use LWP::UserAgent;
 use JSON;
 use Data::Dumper;
+use Config::Simple;
 
 use Bio::KBase;
 use Bio::KBase::MOTranslationService::Impl;
