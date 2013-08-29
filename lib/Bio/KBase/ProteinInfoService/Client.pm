@@ -58,10 +58,10 @@ sub new
 =begin html
 
 <pre>
-$fids is a reference to a list where each element is a fid
-$return is a reference to a hash where the key is a fid and the value is an operon
+$fids is a reference to a list where each element is a ProteinInfo.fid
+$return is a reference to a hash where the key is a ProteinInfo.fid and the value is a ProteinInfo.operon
 fid is a string
-operon is a reference to a list where each element is a fid
+operon is a reference to a list where each element is a ProteinInfo.fid
 
 </pre>
 
@@ -69,10 +69,10 @@ operon is a reference to a list where each element is a fid
 
 =begin text
 
-$fids is a reference to a list where each element is a fid
-$return is a reference to a hash where the key is a fid and the value is an operon
+$fids is a reference to a list where each element is a ProteinInfo.fid
+$return is a reference to a hash where the key is a ProteinInfo.fid and the value is a ProteinInfo.operon
 fid is a string
-operon is a reference to a list where each element is a fid
+operon is a reference to a list where each element is a ProteinInfo.fid
 
 
 =end text
@@ -147,8 +147,8 @@ sub fids_to_operons
 =begin html
 
 <pre>
-$fids is a reference to a list where each element is a fid
-$return is a reference to a hash where the key is a fid and the value is a domains
+$fids is a reference to a list where each element is a ProteinInfo.fid
+$return is a reference to a hash where the key is a ProteinInfo.fid and the value is a ProteinInfo.domains
 fid is a string
 domains is a reference to a list where each element is a string
 
@@ -158,8 +158,8 @@ domains is a reference to a list where each element is a string
 
 =begin text
 
-$fids is a reference to a list where each element is a fid
-$return is a reference to a hash where the key is a fid and the value is a domains
+$fids is a reference to a list where each element is a ProteinInfo.fid
+$return is a reference to a hash where the key is a ProteinInfo.fid and the value is a ProteinInfo.domains
 fid is a string
 domains is a reference to a list where each element is a string
 
@@ -233,17 +233,17 @@ sub fids_to_domains
 =begin html
 
 <pre>
-$fids is a reference to a list where each element is a fid
-$return is a reference to a hash where the key is a fid and the value is a reference to a list where each element is a hit
+$fids is a reference to a list where each element is a ProteinInfo.fid
+$return is a reference to a hash where the key is a ProteinInfo.fid and the value is a reference to a list where each element is a ProteinInfo.Hit
 fid is a string
-hit is a reference to a hash where the following keys are defined:
+Hit is a reference to a hash where the following keys are defined:
 	id has a value which is a string
-	subjectDb has a value which is a string
+	subject_db has a value which is a string
 	description has a value which is a string
-	queryBegin has a value which is an int
-	queryEnd has a value which is an int
-	subjectBegin has a value which is an int
-	subjectEnd has a value which is an int
+	query_begin has a value which is an int
+	query_end has a value which is an int
+	subject_begin has a value which is an int
+	subject_end has a value which is an int
 	score has a value which is a float
 	evalue has a value which is a float
 
@@ -253,17 +253,17 @@ hit is a reference to a hash where the following keys are defined:
 
 =begin text
 
-$fids is a reference to a list where each element is a fid
-$return is a reference to a hash where the key is a fid and the value is a reference to a list where each element is a hit
+$fids is a reference to a list where each element is a ProteinInfo.fid
+$return is a reference to a hash where the key is a ProteinInfo.fid and the value is a reference to a list where each element is a ProteinInfo.Hit
 fid is a string
-hit is a reference to a hash where the following keys are defined:
+Hit is a reference to a hash where the following keys are defined:
 	id has a value which is a string
-	subjectDb has a value which is a string
+	subject_db has a value which is a string
 	description has a value which is a string
-	queryBegin has a value which is an int
-	queryEnd has a value which is an int
-	subjectBegin has a value which is an int
-	subjectEnd has a value which is an int
+	query_begin has a value which is an int
+	query_end has a value which is an int
+	subject_begin has a value which is an int
+	subject_end has a value which is an int
 	score has a value which is a float
 	evalue has a value which is a float
 
@@ -337,8 +337,8 @@ sub fids_to_domain_hits
 =begin html
 
 <pre>
-$domain_ids is a domains
-$return is a reference to a hash where the key is a domain_id and the value is a reference to a list where each element is a fid
+$domain_ids is a ProteinInfo.domains
+$return is a reference to a hash where the key is a ProteinInfo.domain_id and the value is a reference to a list where each element is a ProteinInfo.fid
 domains is a reference to a list where each element is a string
 domain_id is a string
 fid is a string
@@ -349,8 +349,8 @@ fid is a string
 
 =begin text
 
-$domain_ids is a domains
-$return is a reference to a hash where the key is a domain_id and the value is a reference to a list where each element is a fid
+$domain_ids is a ProteinInfo.domains
+$return is a reference to a hash where the key is a ProteinInfo.domain_id and the value is a reference to a list where each element is a ProteinInfo.fid
 domains is a reference to a list where each element is a string
 domain_id is a string
 fid is a string
@@ -426,8 +426,8 @@ sub domains_to_fids
 =begin html
 
 <pre>
-$domain_ids is a domains
-$return is a reference to a hash where the key is a domain_id and the value is a string
+$domain_ids is a ProteinInfo.domains
+$return is a reference to a hash where the key is a ProteinInfo.domain_id and the value is a string
 domains is a reference to a list where each element is a string
 domain_id is a string
 
@@ -437,8 +437,8 @@ domain_id is a string
 
 =begin text
 
-$domain_ids is a domains
-$return is a reference to a hash where the key is a domain_id and the value is a string
+$domain_ids is a ProteinInfo.domains
+$return is a reference to a hash where the key is a ProteinInfo.domain_id and the value is a string
 domains is a reference to a list where each element is a string
 domain_id is a string
 
@@ -513,8 +513,8 @@ sub domains_to_domain_annotations
 =begin html
 
 <pre>
-$fids is a reference to a list where each element is a fid
-$return is a reference to a hash where the key is a fid and the value is an ipr
+$fids is a reference to a list where each element is a ProteinInfo.fid
+$return is a reference to a hash where the key is a ProteinInfo.fid and the value is a ProteinInfo.ipr
 fid is a string
 ipr is a reference to a list where each element is a string
 
@@ -524,8 +524,8 @@ ipr is a reference to a list where each element is a string
 
 =begin text
 
-$fids is a reference to a list where each element is a fid
-$return is a reference to a hash where the key is a fid and the value is an ipr
+$fids is a reference to a list where each element is a ProteinInfo.fid
+$return is a reference to a hash where the key is a ProteinInfo.fid and the value is a ProteinInfo.ipr
 fid is a string
 ipr is a reference to a list where each element is a string
 
@@ -599,10 +599,10 @@ sub fids_to_ipr
 =begin html
 
 <pre>
-$fids is a reference to a list where each element is a fid
-$return is a reference to a hash where the key is a fid and the value is an orthologs
+$fids is a reference to a list where each element is a ProteinInfo.fid
+$return is a reference to a hash where the key is a ProteinInfo.fid and the value is a ProteinInfo.orthologs
 fid is a string
-orthologs is a reference to a list where each element is a fid
+orthologs is a reference to a list where each element is a ProteinInfo.fid
 
 </pre>
 
@@ -610,10 +610,10 @@ orthologs is a reference to a list where each element is a fid
 
 =begin text
 
-$fids is a reference to a list where each element is a fid
-$return is a reference to a hash where the key is a fid and the value is an orthologs
+$fids is a reference to a list where each element is a ProteinInfo.fid
+$return is a reference to a hash where the key is a ProteinInfo.fid and the value is a ProteinInfo.orthologs
 fid is a string
-orthologs is a reference to a list where each element is a fid
+orthologs is a reference to a list where each element is a ProteinInfo.fid
 
 
 =end text
@@ -685,8 +685,8 @@ sub fids_to_orthologs
 =begin html
 
 <pre>
-$fids is a reference to a list where each element is a fid
-$return is a reference to a hash where the key is a fid and the value is an ec
+$fids is a reference to a list where each element is a ProteinInfo.fid
+$return is a reference to a hash where the key is a ProteinInfo.fid and the value is a ProteinInfo.ec
 fid is a string
 ec is a reference to a list where each element is a string
 
@@ -696,8 +696,8 @@ ec is a reference to a list where each element is a string
 
 =begin text
 
-$fids is a reference to a list where each element is a fid
-$return is a reference to a hash where the key is a fid and the value is an ec
+$fids is a reference to a list where each element is a ProteinInfo.fid
+$return is a reference to a hash where the key is a ProteinInfo.fid and the value is a ProteinInfo.ec
 fid is a string
 ec is a reference to a list where each element is a string
 
@@ -770,8 +770,8 @@ sub fids_to_ec
 =begin html
 
 <pre>
-$fids is a reference to a list where each element is a fid
-$return is a reference to a hash where the key is a fid and the value is a go
+$fids is a reference to a list where each element is a ProteinInfo.fid
+$return is a reference to a hash where the key is a ProteinInfo.fid and the value is a ProteinInfo.go
 fid is a string
 go is a reference to a list where each element is a string
 
@@ -781,8 +781,8 @@ go is a reference to a list where each element is a string
 
 =begin text
 
-$fids is a reference to a list where each element is a fid
-$return is a reference to a hash where the key is a fid and the value is a go
+$fids is a reference to a list where each element is a ProteinInfo.fid
+$return is a reference to a hash where the key is a ProteinInfo.fid and the value is a ProteinInfo.go
 fid is a string
 go is a reference to a list where each element is a string
 
@@ -855,12 +855,12 @@ sub fids_to_go
 =begin html
 
 <pre>
-$id is a fid
-$thresh is a neighbor_threshold
-$return is a neighbor
+$id is a ProteinInfo.fid
+$thresh is a ProteinInfo.neighbor_threshold
+$return is a ProteinInfo.neighbor
 fid is a string
 neighbor_threshold is a float
-neighbor is a reference to a hash where the key is a fid and the value is a float
+neighbor is a reference to a hash where the key is a ProteinInfo.fid and the value is a float
 
 </pre>
 
@@ -868,12 +868,12 @@ neighbor is a reference to a hash where the key is a fid and the value is a floa
 
 =begin text
 
-$id is a fid
-$thresh is a neighbor_threshold
-$return is a neighbor
+$id is a ProteinInfo.fid
+$thresh is a ProteinInfo.neighbor_threshold
+$return is a ProteinInfo.neighbor
 fid is a string
 neighbor_threshold is a float
-neighbor is a reference to a hash where the key is a fid and the value is a float
+neighbor is a reference to a hash where the key is a ProteinInfo.fid and the value is a float
 
 
 =end text
@@ -946,12 +946,12 @@ sub fid_to_neighbors
 =begin html
 
 <pre>
-$fids is a reference to a list where each element is a fid
-$thresh is a neighbor_threshold
-$return is a reference to a hash where the key is a fid and the value is a reference to a list where each element is a neighbor
+$fids is a reference to a list where each element is a ProteinInfo.fid
+$thresh is a ProteinInfo.neighbor_threshold
+$return is a reference to a hash where the key is a ProteinInfo.fid and the value is a reference to a list where each element is a ProteinInfo.neighbor
 fid is a string
 neighbor_threshold is a float
-neighbor is a reference to a hash where the key is a fid and the value is a float
+neighbor is a reference to a hash where the key is a ProteinInfo.fid and the value is a float
 
 </pre>
 
@@ -959,12 +959,12 @@ neighbor is a reference to a hash where the key is a fid and the value is a floa
 
 =begin text
 
-$fids is a reference to a list where each element is a fid
-$thresh is a neighbor_threshold
-$return is a reference to a hash where the key is a fid and the value is a reference to a list where each element is a neighbor
+$fids is a reference to a list where each element is a ProteinInfo.fid
+$thresh is a ProteinInfo.neighbor_threshold
+$return is a reference to a hash where the key is a ProteinInfo.fid and the value is a reference to a list where each element is a ProteinInfo.neighbor
 fid is a string
 neighbor_threshold is a float
-neighbor is a reference to a hash where the key is a fid and the value is a float
+neighbor is a reference to a hash where the key is a ProteinInfo.fid and the value is a float
 
 
 =end text
@@ -1198,14 +1198,14 @@ Neighbor is a hash of fids to a neighbor score
 =begin html
 
 <pre>
-a reference to a hash where the key is a fid and the value is a float
+a reference to a hash where the key is a ProteinInfo.fid and the value is a float
 </pre>
 
 =end html
 
 =begin text
 
-a reference to a hash where the key is a fid and the value is a float
+a reference to a hash where the key is a ProteinInfo.fid and the value is a float
 
 =end text
 
@@ -1244,7 +1244,7 @@ a reference to a list where each element is a string
 
 
 
-=head2 hit
+=head2 Hit
 
 =over 4
 
@@ -1252,16 +1252,16 @@ a reference to a list where each element is a string
 
 =item Description
 
-A hit is a description of a match to another object (a fid,
+A Hit is a description of a match to another object (a fid,
 a gene family, an HMM).  It is a structure with the following
 fields:
         id: the common identifier of the object (e.g., a fid, an HMM accession)
-        subjectDb: the source database of the original hit (e.g., KBase for fids, TIGRFam, Pfam, COG)
+        subject_db: the source database of the original hit (e.g., KBase for fids, TIGRFam, Pfam, COG)
         description: a human-readable textual description of the object (might be empty)
-        queryBegin: the start of the hit in the input gene sequence
-        queryEnd: the end of the hit in the input gene sequence
-        subjectBegin: the start of the hit in the object gene sequence
-        subjectEnd: the end of the hit in the object gene sequence
+        query_begin: the start of the hit in the input gene sequence
+        query_end: the end of the hit in the input gene sequence
+        subject_begin: the start of the hit in the object gene sequence
+        subject_end: the end of the hit in the object gene sequence
         score: the score (if provided) of the hit to the object
         evalue: the evalue (if provided) of the hit to the object
 
@@ -1273,12 +1273,12 @@ fields:
 <pre>
 a reference to a hash where the following keys are defined:
 id has a value which is a string
-subjectDb has a value which is a string
+subject_db has a value which is a string
 description has a value which is a string
-queryBegin has a value which is an int
-queryEnd has a value which is an int
-subjectBegin has a value which is an int
-subjectEnd has a value which is an int
+query_begin has a value which is an int
+query_end has a value which is an int
+subject_begin has a value which is an int
+subject_end has a value which is an int
 score has a value which is a float
 evalue has a value which is a float
 
@@ -1290,12 +1290,12 @@ evalue has a value which is a float
 
 a reference to a hash where the following keys are defined:
 id has a value which is a string
-subjectDb has a value which is a string
+subject_db has a value which is a string
 description has a value which is a string
-queryBegin has a value which is an int
-queryEnd has a value which is an int
-subjectBegin has a value which is an int
-subjectEnd has a value which is an int
+query_begin has a value which is an int
+query_end has a value which is an int
+subject_begin has a value which is an int
+subject_end has a value which is an int
 score has a value which is a float
 evalue has a value which is a float
 
@@ -1418,14 +1418,14 @@ order of the fids in the operon.
 =begin html
 
 <pre>
-a reference to a list where each element is a fid
+a reference to a list where each element is a ProteinInfo.fid
 </pre>
 
 =end html
 
 =begin text
 
-a reference to a list where each element is a fid
+a reference to a list where each element is a ProteinInfo.fid
 
 =end text
 
@@ -1449,14 +1449,14 @@ Orthologs are a list of fids which are orthologous to a given fid.
 =begin html
 
 <pre>
-a reference to a list where each element is a fid
+a reference to a list where each element is a ProteinInfo.fid
 </pre>
 
 =end html
 
 =begin text
 
-a reference to a list where each element is a fid
+a reference to a list where each element is a ProteinInfo.fid
 
 =end text
 
@@ -1525,7 +1525,9 @@ sub _post {
         }
     }
     else {
-        $obj->{id} = $self->id if (defined $self->id);
+        # $obj->{id} = $self->id if (defined $self->id);
+	# Assign a random number to the id if one hasn't been set
+	$obj->{id} = (defined $self->id) ? $self->id : substr(rand(),2);
     }
 
     my $content = $json->encode($obj);

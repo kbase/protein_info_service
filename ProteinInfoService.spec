@@ -37,20 +37,20 @@ module ProteinInfo {
 	typedef list<string> domains;
 
         /*
-        A hit is a description of a match to another object (a fid,
+        A Hit is a description of a match to another object (a fid,
         a gene family, an HMM).  It is a structure with the following
         fields:
                 id: the common identifier of the object (e.g., a fid, an HMM accession)
-		subjectDb: the source database of the original hit (e.g., KBase for fids, TIGRFam, Pfam, COG)
+		subject_db: the source database of the original hit (e.g., KBase for fids, TIGRFam, Pfam, COG)
                 description: a human-readable textual description of the object (might be empty)
-                queryBegin: the start of the hit in the input gene sequence
-                queryEnd: the end of the hit in the input gene sequence
-                subjectBegin: the start of the hit in the object gene sequence
-                subjectEnd: the end of the hit in the object gene sequence
+                query_begin: the start of the hit in the input gene sequence
+                query_end: the end of the hit in the input gene sequence
+                subject_begin: the start of the hit in the object gene sequence
+                subject_end: the end of the hit in the object gene sequence
                 score: the score (if provided) of the hit to the object
                 evalue: the evalue (if provided) of the hit to the object
         */
-        typedef structure { string id; string subjectDb; string description; int queryBegin; int queryEnd; int subjectBegin; int subjectEnd; float score; float evalue; } hit;
+        typedef structure { string id; string subject_db; string description; int query_begin; int query_end; int subject_begin; int subject_end; float score; float evalue; } Hit;
 
 	/*
 	ECs are a list of Enzyme Commission identifiers.
@@ -102,7 +102,7 @@ module ProteinInfo {
         returns a mapping of each fid to a list of hits. (This includes COG,
         even though COG is not part of InterProScan.)
         */
-        funcdef fids_to_domain_hits (list<fid> fids) returns (mapping<fid, list<hit>>);
+        funcdef fids_to_domain_hits (list<fid> fids) returns (mapping<fid, list<Hit>>);
 
 	/*
 	domains_to_fids takes as input a list of domain_ids, and
