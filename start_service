@@ -1,6 +1,8 @@
 #!/bin/sh
 echo starting protein_info_service server.
 export PERL5LIB=$PERL5LIB:/kb/deployment/lib
+export KB_DEPLOYMENT_CONFIG=/kb/deployment/deployment.cfg
+export SERVICE=protein_info_service
 #uncomment to debug: export STARMAN_DEBUG=1
 /kb/runtime/bin/starman --listen :7057 --pid /kb/deployment/services/protein_info_service/service.pid --daemonize \
   --access-log /kb/deployment/services/protein_info_service/log/access.log \
