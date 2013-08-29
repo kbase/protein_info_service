@@ -128,6 +128,42 @@ deploy-server-libs:
 	mkdir -p $(SERVICE_DIR)
 	@echo "deployed server for $(SERVICE)."
 
+# deploys scripts to target (usually set to /kb/deployment)
+deploy-script-wrappers:
+	$(TOOLS_DIR)/deploy-wrappers \
+                --jsonCommandsFile COMMANDS.json \
+                --irisCommandsFile COMMANDS \
+                --target $(TARGET) \
+                --devContainerToolsDir $(TOOLS_DIR)
+
+undeploy-script-wrappers:
+	$(TOOLS_DIR)/deploy-wrappers \
+                --jsonCommandsFile COMMANDS.json \
+                --irisCommandsFile COMMANDS \
+                --target $(TARGET) \
+                --devContainerToolsDir $(TOOLS_DIR) \
+                --undeploy
+
+# creates script wrappers in dev_container/bin without copying scripts (this is
+# how compile_typespec and kb_seed scripts are put on the path after ‘make’
+build-dev-container-script-wrappers:
+	$(TOOLS_DIR)/deploy-wrappers \
+                --jsonCommandsFile COMMANDS.json \
+                --irisCommandsFile COMMANDS \
+                --target $(TOP_DIR) \
+                --no-copyScripts \
+                --devContainerToolsDir $(TOOLS_DIR)
+
+clean-dev-container-script-wrappers:
+	$(TOOLS_DIR)/deploy-wrappers \
+                --jsonCommandsFile COMMANDS.json \
+                --irisCommandsFile COMMANDS \
+                --target $(TOP_DIR) \
+                --no-copyScripts \
+                --devContainerToolsDir $(TOOLS_DIR) \
+                --undeploy
+
+
 # creates start/stop/reboot scripts and copies them to the deployment target
 deploy-server-scripts:
 	# First create the start script (should be a better way to do this...)
