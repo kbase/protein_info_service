@@ -22,6 +22,7 @@ in other genomes, and operons.
 use LWP::UserAgent;
 use JSON;
 use Data::Dumper;
+use Config::Simple;
 
 use Bio::KBase;
 use Bio::KBase::MOTranslationService::Impl;
@@ -53,43 +54,48 @@ sub new
 
         # Need to initialize the database handler for that Bio::KBase::ProteinInfoService::Gene depends on
         # the GenomicsUtils module caches the database handle internally
-	my $dbms='mysql';
-	my $dbName='genomics';
-	my $user='guest';
-	my $pass='guest';
-	my $port=3306;
-	my $dbhost='db1.chicago.kbase.us';
-	my $sock='';
-        # we currently have 2 databases in play, this is a connection to the test database
-        # on Keith's dev instance
-#	my $dbms_dev='mysql';
-#	my $dbName_dev='***REMOVED***';
-#	my $user_dev='genomics';
-#	my $pass_dev=undef;
-#	my $port_dev=3306;
-#	my $dbhost_dev='140.221.84.194';
-#	my $sock_dev='';
+
+        my $configFile = $ENV{KB_DEPLOYMENT_CONFIG};
+	# don't want this hardcoded; figure out what make puts out
+            my $SERVICE = $ENV{SERVICE};
+
+            my $config = Config::Simple->new();
+            $config->read($configFile);
+            my @paramList = qw(dbname sock user pass dbhost port dbms);
+	    my %params;
+            foreach my $param (@paramList)
+            {
+                my $value = $config->param("$SERVICE.$param");
+                if ($value)
+                {
+                    $params{$param} = $value;
+                }
+            }
+
 	# on devdb1.newyork
-	my $dbms_dev='mysql';
-	my $dbName_dev='***REMOVED***';
-	my $user_dev='***REMOVED***';
-	my $pass_dev='***REMOVED***';
-	my $port_dev=3306;
-	my $dbhost_dev='***REMOVED***';
-	my $sock_dev='';
+	my $dbms='mysql';
+	my $dbName='***REMOVED***';
+	my $user='***REMOVED***';
+	my $pass='***REMOVED***';
+	my $port=3306;
+	my $dbhost='***REMOVED***';
+	my $sock='';
 	
-	# use devdb1.newyork for both db handles
-        my $dbKernel = DBKernel->new($dbms_dev, $dbName_dev, $user_dev, $pass_dev, $port_dev, $dbhost_dev, $sock_dev);
+        my $dbKernel = DBKernel->new(
+		$params{dbms}, $params{dbname},
+		 $params{user}, $params{pass}, $params{port},
+		 $params{dbhost}, $params{sock},
+		);
         my $moDbh=$dbKernel->{_dbh};
-        my $dbKernel_dev = DBKernel->new($dbms_dev, $dbName_dev, $user_dev, $pass_dev, $port_dev, $dbhost_dev, $sock_dev);
-        my $moDbh_dev=$dbKernel_dev->{_dbh};
-        my $gene_dbh = Bio::KBase::ProteinInfoService::Browser::DB::dbConnect($dbhost_dev,$user_dev,$pass_dev,$dbName_dev);
+        #my $dbKernel_dev = DBKernel->new($dbms_dev, $dbName_dev, $user_dev, $pass_dev, $port_dev, $dbhost_dev, $sock_dev);
+        #my $moDbh_dev=$dbKernel_dev->{_dbh};
+        #my $gene_dbh = Bio::KBase::ProteinInfoService::Browser::DB::dbConnect($dbhost_dev,$user_dev,$pass_dev,$dbName_dev);
 
 #	$self->{kbIdServer}=$kbIdServer;
 	$self->{kbCDM}=$kbCDM;
 	$self->{kbMOT}=$kbMOT;
 	$self->{moDbh}=$moDbh;
-        $self->{moDbh_dev} = $moDbh_dev;
+        #$self->{moDbh_dev} = $moDbh_dev;
     #END_CONSTRUCTOR
 
     if ($self->can('_init_instance'))
@@ -1334,7 +1340,7 @@ sub fidlist_to_neighbors
     return {} unless (scalar @$fids);
 
     my $kbMOT=$self->{kbMOT};
-    my $dbh =$self->{moDbh_dev};
+    my $dbh =$self->{moDbh};
     my $kbCDM =$self->{kbCDM};
     my $fid2locus=$kbMOT->fids_to_moLocusIds($fids);
     my $fid2genome = $kbCDM->fids_to_genomes( $fids);
