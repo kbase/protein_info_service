@@ -305,6 +305,13 @@ sub fids_to_domains
 
 	$return={};
 
+# to do:
+# query Fid2COG instead of COG table
+# query Fid2Domain for TIGRFAM and Pfam
+# do not query Locus2Domain for TIGRFAM and Pfam
+# why did I make so many queries instead of combining
+# into one?
+
 	if (scalar @$fids)
 	{
 #		my $ctxA = ContextAdapter->new($ctx);
@@ -441,6 +448,13 @@ sub fids_to_domain_hits
     #BEGIN fids_to_domain_hits
 
 	$return={};
+
+# to do:
+# query Fid2COG, Fid2COGrpsblast instead of COG, COGrpsblast tables
+# query Fid2Domain for TIGRFAM and Pfam
+# do not query Locus2Domain for TIGRFAM and Pfam
+# why did I make so many queries instead of combining
+# into one?
 
 	if (scalar @$fids)
 	{
@@ -584,6 +598,11 @@ sub domains_to_fids
     my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
     my($return);
     #BEGIN domains_to_fids
+
+# to do:
+# query Fid2COG instead of COG table
+# query Fid2Domain for TIGRFAM and Pfam
+# do not query Locus2Domain for TIGRFAM and Pfam
 
 	$return={};
 	
