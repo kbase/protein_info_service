@@ -478,23 +478,70 @@ sub fids_to_domain_hits
                 my $moDbh=$self->{moDbh};
                 my $kbMOT=$self->{kbMOT};
 
+		my $domainSql='SELECT fid,domainId,domainName,iprName,seqBegin,seqEnd,domainBegin,domainEnd,score,evalue,domainDb FROM Fid2Domain LEFT JOIN DomainInfo USING (domainId) WHERE
+				fid IN (';
+		my $placeholders='?,' x (scalar @{$fids});
+		chop $placeholders;
+		$domainSql.=$placeholders.')';
+		my $domainSth=$moDbh->prepare($domainSql);
+		$domainSth->execute(@{$fids});
+
+		while (my $row=$domainSth->fetch)
+		{
+			push @{$return->{$row->[0]}}, {
+				id      =>      $row->[1],
+                                description     =>      $row->[2] . ' ' . $row->[3],
+                                queryBegin      =>      $row->[4],
+                                queryEnd        =>      $row->[5],
+                                subjectBegin    =>      $row->[6],
+                                subjectEnd      =>      $row->[7],
+                                score   =>      $row->[8],
+                                evalue  =>      $row->[9],
+                                subjectDb       =>      $row->[10],
+                        };
+		}
+
+		# will want to change name back to Fid2COGrpsblast
+		# when load on db server is complete
+		my $cogSql='SELECT c.fid,CONCAT("COG",c.cogInfoId),geneName,description,qBegin,qEnd,sBegin,sEnd,score,evalue,"COG" FROM Fid2COG c JOIN Fid2COGrpsblast2 rps ON (c.fid=rps.fid AND c.cogInfoId=rps.subject) JOIN COGInfo ci ON (c.cogInfoId=ci.cogInfoId) WHERE
+				c.fid IN (';
+		$cogSql.=$placeholders.')';
+warn $cogSql;
+		my $cogSth=$moDbh->prepare($cogSql);
+		$cogSth->execute(@{$fids});
+
+		while (my $row=$cogSth->fetch)
+		{
+			push @{$return->{$row->[0]}}, {
+				id      =>      $row->[1],
+                                description     =>      $row->[2] . ' ' . $row->[3],
+                                queryBegin      =>      $row->[4],
+                                queryEnd        =>      $row->[5],
+                                subjectBegin    =>      $row->[6],
+                                subjectEnd      =>      $row->[7],
+                                score   =>      $row->[8],
+                                evalue  =>      $row->[9],
+                                subjectDb       =>      $row->[10],
+                        };
+		}
+
                 my $fids2externalIds=$kbMOT->fids_to_moLocusIds($fids);
 
                 # this is not the best way, but should work
                 foreach my $fid (keys %$fids2externalIds)
                 {
-                        my $domainSql='SELECT locusId,domainId,domainName,iprName,seqBegin,seqEnd,domainBegin,domainEnd,score,evalue,domainDb FROM Locus2Domain LEFT JOIN DomainInfo USING (domainId) WHERE
+                        my $moDomainSql='SELECT locusId,domainId,domainName,iprName,seqBegin,seqEnd,domainBegin,domainEnd,score,evalue,domainDb FROM Locus2Domain LEFT JOIN DomainInfo USING (domainId) WHERE domainDb NOT IN ("TIGRFAM","PFAM") AND 
                                 locusId = ?';
 #                       my $placeholders='?,' x (@{$fids2externalIds->{$fid}});
 #                       chop $placeholders;
 #                       $sql.=$placeholders.')';
 
-                        my $domainSth=$moDbh->prepare($domainSql);
-                        $domainSth->execute($fids2externalIds->{$fid}[0]);
+                        my $moDomainSth=$moDbh->prepare($moDomainSql);
+                        $moDomainSth->execute($fids2externalIds->{$fid}[0]);
 
                         my $hits=[];
 
-                        while (my $row=$domainSth->fetch)
+                        while (my $row=$moDomainSth->fetch)
                         {
                                 # one of the DBI convenience methods
                                 # would be more readable here
@@ -511,31 +558,11 @@ sub fids_to_domain_hits
                                 };
                         }
 
-                        my $cogSql='select c.locusId, CONCAT("COG",c.cogInfoId),geneName,description,qBegin,qEnd,sBegin,sEnd,score,evalue,"COG" from COG c join COGrpsblast rps ON (c.locusId=rps.locusId and c.version=rps.version and c.cogInfoId=rps.subject) JOIN COGInfo ci ON (c.cogInfoId=ci.cogInfoId) WHERE c.locusId=?';
-
-                        my $cogSth=$moDbh->prepare($cogSql);
-                        $cogSth->execute($fids2externalIds->{$fid}[0]);
-                        while (my $row=$cogSth->fetch)
-                        {
-                                # one of the DBI convenience methods
-                                # would be more readable here
-                                push @$hits, {
-                                        id      =>      $row->[1],
-                                        description     =>      $row->[2] . ' ' . $row->[3],
-                                        queryBegin      =>      $row->[4],
-                                        queryEnd        =>      $row->[5],
-                                        subjectBegin    =>      $row->[6],
-                                        subjectEnd      =>      $row->[7],
-                                        score   =>      $row->[8],
-                                        evalue  =>      $row->[9],
-                                        subjectDb       =>      $row->[10],
-                                };
-                        }
-
-                        $return->{$fid}=$hits;
+                        push @{$return->{$fid}},@$hits;
 
                 }
         }
+
     #END fids_to_domain_hits
     my @_bad_returns;
     (ref($return) eq 'HASH') or push(@_bad_returns, "Invalid type for return variable \"return\" (value was \"$return\")");
