@@ -348,16 +348,16 @@ sub fids_to_domains
 		# this is a poor way, but should work
 		foreach my $fid (keys %$fids2externalIds)
 		{
-			my $domainSql='SELECT ld.locusId,ld.domainId FROM Locus2Domain ld JOIN DomainInfo di USING (domainId) WHERE domainDb NOT IN ("TIGRFAM","PFAM") AND
+			my $moDomainSql='SELECT ld.locusId,ld.domainId FROM Locus2Domain ld JOIN DomainInfo di USING (domainId) WHERE domainDb NOT IN ("TIGRFAM","PFAM") AND
 				locusId = ?';
 #			my $placeholders='?,' x (@{$fids2externalIds->{$fid}});
 #			chop $placeholders;
 #			$sql.=$placeholders.')';
 		
-			my $domainSth=$moDbh->prepare($domainSql);
-			$domainSth->execute($fids2externalIds->{$fid}[0]);
+			my $moDomainSth=$moDbh->prepare($moDomainSql);
+			$moDomainSth->execute($fids2externalIds->{$fid}[0]);
 
-			while (my $row=$domainSth->fetch)
+			while (my $row=$moDomainSth->fetch)
 			{
 				$fid2domains->{$fid}{$row->[1]} += 1;
 			}
@@ -619,32 +619,37 @@ sub domains_to_fids
 
 	$return={};
 	
-	my $moDbh=$self->{moDbh};
-	my $kbMOT=$self->{kbMOT};
-
 	if (scalar @$domain_ids)
 	{
 
-		# again, not ideal, but at least workable
-		# possible idea: use kinosearch for this?
+		my $moDbh=$self->{moDbh};
+		my $kbMOT=$self->{kbMOT};
+
+		# again, DISTINCT queries seem slow, so we
+		# do our own pruning here
+		my $domain2fid={};
+
+		# not ideal, but at least workable
 		foreach my $domainId (@$domain_ids)
 		{
 			$return->{$domainId}=[];
-			my $domainSql='SELECT locusId FROM Locus2Domain WHERE
+
+
+			my $domainSql='SELECT fid FROM Fid2Domain WHERE
 				domainId = ?';
-		
+
 			my $domainSth=$moDbh->prepare($domainSql);
+
 			$domainSth->execute($domainId);
-			my %externalIds;
 			while (my $row=$domainSth->fetch)
 			{
-				$externalIds{$row->[0]} += 1;
+				$domain2fid->{$domainId}{$row->[0]} += 1;
 			}
 
 			my ($cogInfoId)=$domainId=~/^COG(\d+)$/;
 			if ($cogInfoId)
 			{
-				my $cogSql='SELECT locusId FROM COG WHERE
+				my $cogSql='SELECT fid FROM Fid2COG WHERE
 					cogInfoId = ?';
 		
 				my $cogSth=$moDbh->prepare($cogSql);
@@ -652,8 +657,19 @@ sub domains_to_fids
 				$cogSth->execute($cogInfoId);
 				while (my $row=$cogSth->fetch)
 				{
-					$externalIds{$row->[0]} += 1;
+					$domain2fid->{$domainId}{$row->[0]} += 1;
 				}
+			}
+
+			my $moDomainSql='SELECT locusId FROM Locus2Domain JOIN DomainInfo di USING (domainId) WHERE domainDb NOT IN ("TIGRFAM","PFAM") AND
+				domainId = ?';
+		
+			my $moDomainSth=$moDbh->prepare($moDomainSql);
+			$moDomainSth->execute($domainId);
+			my %externalIds;
+			while (my $row=$moDomainSth->fetch)
+			{
+				$externalIds{$row->[0]} += 1;
 			}
 
 			my @externalIds=keys %externalIds;
@@ -671,6 +687,11 @@ sub domains_to_fids
 				my @domain_fids=keys $domain_fids;
 				$return->{$domainId} = \@domain_fids;
 			}
+		}
+
+		foreach my $domainId (keys %$domain2fid)
+		{
+			push @{$return->{$domainId}}, keys %{$domain2fid->{$domainId}};
 		}
 
 	}
