@@ -305,13 +305,6 @@ sub fids_to_domains
 
 	$return={};
 
-# to do:
-# query Fid2COG instead of COG table
-# query Fid2Domain for TIGRFAM and Pfam
-# do not query Locus2Domain for TIGRFAM and Pfam
-# why did I make so many queries instead of combining
-# into one?
-
 	if (scalar @$fids)
 	{
 #		my $ctxA = ContextAdapter->new($ctx);
@@ -320,12 +313,42 @@ sub fids_to_domains
 		my $moDbh=$self->{moDbh};
 		my $kbMOT=$self->{kbMOT};
 
+		# for some reason DISTINCT queries are really slow
+		# so we have to do our own filtering
+		my $domainSql='SELECT fid,domainId FROM Fid2Domain WHERE
+				fid IN (';
+		my $placeholders='?,' x (scalar @{$fids});
+		chop $placeholders;
+		$domainSql.=$placeholders.')';
+		my $domainSth=$moDbh->prepare($domainSql);
+		$domainSth->execute(@{$fids});
+
+		my $fid2domains;
+
+		while (my $row=$domainSth->fetch)
+		{
+			$fid2domains->{$row->[0]}{$row->[1]} += 1;
+		}
+
+		my $cogSql='SELECT fid,CONCAT("COG",cogInfoId) FROM Fid2COG WHERE
+				fid IN (';
+		$cogSql.=$placeholders.')';
+		my $cogSth=$moDbh->prepare($cogSql);
+		$cogSth->execute(@{$fids});
+
+		while (my $row=$cogSth->fetch)
+		{
+			$fid2domains->{$row->[0]}{$row->[1]} += 1;
+		}
+
+		# this section is for data not migrated to
+		# direct fid->domain lookup yet
 		my $fids2externalIds=$kbMOT->fids_to_moLocusIds($fids);
 
-		# this is not the best way, but should work
+		# this is a poor way, but should work
 		foreach my $fid (keys %$fids2externalIds)
 		{
-			my $domainSql='SELECT locusId,domainId FROM Locus2Domain WHERE
+			my $domainSql='SELECT ld.locusId,ld.domainId FROM Locus2Domain ld JOIN DomainInfo di USING (domainId) WHERE domainDb NOT IN ("TIGRFAM","PFAM") AND
 				locusId = ?';
 #			my $placeholders='?,' x (@{$fids2externalIds->{$fid}});
 #			chop $placeholders;
@@ -334,26 +357,18 @@ sub fids_to_domains
 			my $domainSth=$moDbh->prepare($domainSql);
 			$domainSth->execute($fids2externalIds->{$fid}[0]);
 
-			my %domains;
-
 			while (my $row=$domainSth->fetch)
 			{
-				$domains{$row->[1]} += 1;
+				$fid2domains->{$fid}{$row->[1]} += 1;
 			}
-
-			my $cogSql='SELECT locusId,CONCAT("COG",cogInfoId) FROM COG WHERE
-				locusId = ?';
-		
-			my $cogSth=$moDbh->prepare($cogSql);
-			$cogSth->execute($fids2externalIds->{$fid}[0]);
-			while (my $row=$cogSth->fetch)
-			{
-				$domains{$row->[1]} += 1;
-			}
-
-			@{$return->{$fid}}=keys %domains;
 
 		}
+
+		foreach my $fid (keys %$fid2domains)
+		{
+			push @{$return->{$fid}}, keys %{$fid2domains->{$fid}};
+		}
+
 	}
 
     #END fids_to_domains
@@ -448,9 +463,6 @@ sub fids_to_domain_hits
     #BEGIN fids_to_domain_hits
         $return={};
 
-<<<<<<< HEAD
-	$return={};
-
 # to do:
 # query Fid2COG, Fid2COGrpsblast instead of COG, COGrpsblast tables
 # query Fid2Domain for TIGRFAM and Pfam
@@ -462,12 +474,6 @@ sub fids_to_domain_hits
 	{
 #		my $ctxA = ContextAdapter->new($ctx);
 #		my $user_token = $ctxA->user_token();
-=======
-        if (scalar @$fids)
-        {
-#               my $ctxA = ContextAdapter->new($ctx);
-#               my $user_token = $ctxA->user_token();
->>>>>>> 16e00cb1b9c0b50141fec1993d7bd6b28eeb746b
 
                 my $moDbh=$self->{moDbh};
                 my $kbMOT=$self->{kbMOT};
@@ -1482,6 +1488,17 @@ sub fids_to_eukaryotic_orthologs
     my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
     my($return);
     #BEGIN fids_to_eukaryotic_orthologs
+
+	$return={};
+
+	if (scalar @$fids)
+	{
+#		my $ctxA = ContextAdapter->new($ctx);
+#		my $user_token = $ctxA->user_token();
+
+		my $moDbh=$self->{moDbh};
+	}
+
     #END fids_to_eukaryotic_orthologs
     my @_bad_returns;
     (ref($return) eq 'HASH') or push(@_bad_returns, "Invalid type for return variable \"return\" (value was \"$return\")");
