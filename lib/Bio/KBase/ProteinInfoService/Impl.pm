@@ -1423,6 +1423,79 @@ sub fidlist_to_neighbors
 
 
 
+=head2 fids_to_eukaryotic_orthologs
+
+  $return = $obj->fids_to_eukaryotic_orthologs($fids)
+
+=over 4
+
+=item Parameter and return types
+
+=begin html
+
+<pre>
+$fids is a reference to a list where each element is a ProteinInfo.fid
+$return is a reference to a hash where the key is a ProteinInfo.fid and the value is a ProteinInfo.orthologs
+fid is a string
+orthologs is a reference to a list where each element is a ProteinInfo.fid
+
+</pre>
+
+=end html
+
+=begin text
+
+$fids is a reference to a list where each element is a ProteinInfo.fid
+$return is a reference to a hash where the key is a ProteinInfo.fid and the value is a ProteinInfo.orthologs
+fid is a string
+orthologs is a reference to a list where each element is a ProteinInfo.fid
+
+
+=end text
+
+
+
+=item Description
+
+fids_to_eukaryotic_orthologs takes as input a list of
+feature ids, and returns a mapping of each fid to its
+orthologous fids.  It uses a different data source than
+the fids_to_orthologs method.
+
+=back
+
+=cut
+
+sub fids_to_eukaryotic_orthologs
+{
+    my $self = shift;
+    my($fids) = @_;
+
+    my @_bad_arguments;
+    (ref($fids) eq 'ARRAY') or push(@_bad_arguments, "Invalid type for argument \"fids\" (value was \"$fids\")");
+    if (@_bad_arguments) {
+	my $msg = "Invalid arguments passed to fids_to_eukaryotic_orthologs:\n" . join("", map { "\t$_\n" } @_bad_arguments);
+	Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
+							       method_name => 'fids_to_eukaryotic_orthologs');
+    }
+
+    my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
+    my($return);
+    #BEGIN fids_to_eukaryotic_orthologs
+    #END fids_to_eukaryotic_orthologs
+    my @_bad_returns;
+    (ref($return) eq 'HASH') or push(@_bad_returns, "Invalid type for return variable \"return\" (value was \"$return\")");
+    if (@_bad_returns) {
+	my $msg = "Invalid returns passed to fids_to_eukaryotic_orthologs:\n" . join("", map { "\t$_\n" } @_bad_returns);
+	Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
+							       method_name => 'fids_to_eukaryotic_orthologs');
+    }
+    return($return);
+}
+
+
+
+
 =head2 version 
 
   $return = $obj->version()
