@@ -1026,6 +1026,93 @@ sub fidlist_to_neighbors
 
 
 
+=head2 fids_to_eukaryotic_orthologs
+
+  $return = $obj->fids_to_eukaryotic_orthologs($fids)
+
+=over 4
+
+=item Parameter and return types
+
+=begin html
+
+<pre>
+$fids is a reference to a list where each element is a ProteinInfo.fid
+$return is a reference to a hash where the key is a ProteinInfo.fid and the value is a ProteinInfo.orthologs
+fid is a string
+orthologs is a reference to a list where each element is a ProteinInfo.fid
+
+</pre>
+
+=end html
+
+=begin text
+
+$fids is a reference to a list where each element is a ProteinInfo.fid
+$return is a reference to a hash where the key is a ProteinInfo.fid and the value is a ProteinInfo.orthologs
+fid is a string
+orthologs is a reference to a list where each element is a ProteinInfo.fid
+
+
+=end text
+
+=item Description
+
+fids_to_eukaryotic_orthologs takes as input a list of
+feature ids, and returns a mapping of each fid to its
+orthologous fids.  It uses a different data source than
+the fids_to_orthologs method.
+
+=back
+
+=cut
+
+sub fids_to_eukaryotic_orthologs
+{
+    my($self, @args) = @_;
+
+# Authentication: none
+
+    if ((my $n = @args) != 1)
+    {
+	Bio::KBase::Exceptions::ArgumentValidationError->throw(error =>
+							       "Invalid argument count for function fids_to_eukaryotic_orthologs (received $n, expecting 1)");
+    }
+    {
+	my($fids) = @args;
+
+	my @_bad_arguments;
+        (ref($fids) eq 'ARRAY') or push(@_bad_arguments, "Invalid type for argument 1 \"fids\" (value was \"$fids\")");
+        if (@_bad_arguments) {
+	    my $msg = "Invalid arguments passed to fids_to_eukaryotic_orthologs:\n" . join("", map { "\t$_\n" } @_bad_arguments);
+	    Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
+								   method_name => 'fids_to_eukaryotic_orthologs');
+	}
+    }
+
+    my $result = $self->{client}->call($self->{url}, {
+	method => "ProteinInfo.fids_to_eukaryotic_orthologs",
+	params => \@args,
+    });
+    if ($result) {
+	if ($result->is_error) {
+	    Bio::KBase::Exceptions::JSONRPC->throw(error => $result->error_message,
+					       code => $result->content->{code},
+					       method_name => 'fids_to_eukaryotic_orthologs',
+					      );
+	} else {
+	    return wantarray ? @{$result->result} : $result->result->[0];
+	}
+    } else {
+        Bio::KBase::Exceptions::HTTP->throw(error => "Error invoking method fids_to_eukaryotic_orthologs",
+					    status_line => $self->{client}->status_line,
+					    method_name => 'fids_to_eukaryotic_orthologs',
+				       );
+    }
+}
+
+
+
 sub version {
     my ($self) = @_;
     my $result = $self->{client}->call($self->{url}, {
@@ -1037,16 +1124,16 @@ sub version {
             Bio::KBase::Exceptions::JSONRPC->throw(
                 error => $result->error_message,
                 code => $result->content->{code},
-                method_name => 'fidlist_to_neighbors',
+                method_name => 'fids_to_eukaryotic_orthologs',
             );
         } else {
             return wantarray ? @{$result->result} : $result->result->[0];
         }
     } else {
         Bio::KBase::Exceptions::HTTP->throw(
-            error => "Error invoking method fidlist_to_neighbors",
+            error => "Error invoking method fids_to_eukaryotic_orthologs",
             status_line => $self->{client}->status_line,
-            method_name => 'fidlist_to_neighbors',
+            method_name => 'fids_to_eukaryotic_orthologs',
         );
     }
 }
