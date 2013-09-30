@@ -159,4 +159,12 @@ module ProteinInfo {
 	funcdef fidlist_to_neighbors(list<fid> fids, neighbor_threshold thresh) returns (mapping<fid, list<neighbor>>);
 
 
+	/*
+	fids_to_eukaryotic_orthologs takes as input a list of
+	feature ids, and returns a mapping of each fid to its
+	orthologous fids.  It uses a different data source than
+	the fids_to_orthologs method.
+	*/
+	funcdef fids_to_eukaryotic_orthologs (list<fid> fids) returns (mapping<fid, orthologs>);
+
 };
