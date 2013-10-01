@@ -503,7 +503,7 @@ sub fids_to_domain_hits
 
 		# will want to change name back to Fid2COGrpsblast
 		# when load on db server is complete
-		my $cogSql='SELECT c.fid,CONCAT("COG",c.cogInfoId),geneName,description,qBegin,qEnd,sBegin,sEnd,score,evalue,"COG" FROM Fid2COG c JOIN Fid2COGrpsblast2 rps ON (c.fid=rps.fid AND c.cogInfoId=rps.subject) JOIN COGInfo ci ON (c.cogInfoId=ci.cogInfoId) WHERE
+		my $cogSql='SELECT c.fid,CONCAT("COG",c.cogInfoId),geneName,description,qBegin,qEnd,sBegin,sEnd,score,evalue,"COG" FROM Fid2COG c JOIN Fid2COGrpsblast rps ON (c.fid=rps.fid AND c.cogInfoId=rps.subject) JOIN COGInfo ci ON (c.cogInfoId=ci.cogInfoId) WHERE
 				c.fid IN (';
 		$cogSql.=$placeholders.')';
 warn $cogSql;
