@@ -463,13 +463,6 @@ sub fids_to_domain_hits
     #BEGIN fids_to_domain_hits
         $return={};
 
-# to do:
-# query Fid2COG, Fid2COGrpsblast instead of COG, COGrpsblast tables
-# query Fid2Domain for TIGRFAM and Pfam
-# do not query Locus2Domain for TIGRFAM and Pfam
-# why did I make so many queries instead of combining
-# into one?
-
 	if (scalar @$fids)
 	{
 #		my $ctxA = ContextAdapter->new($ctx);
@@ -501,9 +494,7 @@ sub fids_to_domain_hits
                         };
 		}
 
-		# will want to change name back to Fid2COGrpsblast
-		# when load on db server is complete
-		my $cogSql='SELECT c.fid,CONCAT("COG",c.cogInfoId),geneName,description,qBegin,qEnd,sBegin,sEnd,score,evalue,"COG" FROM Fid2COG c JOIN Fid2COGrpsblast2 rps ON (c.fid=rps.fid AND c.cogInfoId=rps.subject) JOIN COGInfo ci ON (c.cogInfoId=ci.cogInfoId) WHERE
+		my $cogSql='SELECT c.fid,CONCAT("COG",c.cogInfoId),geneName,description,qBegin,qEnd,sBegin,sEnd,score,evalue,"COG" FROM Fid2COG c JOIN Fid2COGrpsblast rps ON (c.fid=rps.fid AND c.cogInfoId=rps.subject) JOIN COGInfo ci ON (c.cogInfoId=ci.cogInfoId) WHERE
 				c.fid IN (';
 		$cogSql.=$placeholders.')';
 warn $cogSql;
@@ -638,11 +629,6 @@ sub domains_to_fids
     my $ctx = $Bio::KBase::ProteinInfoService::Service::CallContext;
     my($return);
     #BEGIN domains_to_fids
-
-# to do:
-# query Fid2COG instead of COG table
-# query Fid2Domain for TIGRFAM and Pfam
-# do not query Locus2Domain for TIGRFAM and Pfam
 
 	$return={};
 	
@@ -1545,6 +1531,29 @@ sub fids_to_eukaryotic_orthologs
 #		my $user_token = $ctxA->user_token();
 
 		my $moDbh=$self->{moDbh};
+
+		my $sql='SELECT fid1,fid2 FROM FidOrthologs WHERE
+			fid1 IN (';
+		my $placeholders='?,' x (scalar @{$fids});
+		chop $placeholders;
+		$sql.=$placeholders.')';
+		$sql.='UNION SELECT fid2,fid1 FROM FidOrthologs WHERE
+			fid2 IN (';
+		$sql.=$placeholders.')';
+		my $sth=$moDbh->prepare($sql);
+		$sth->execute(@{$fids},@{$fids});
+
+		my $fid2orthologs;
+
+		while (my $row=$sth->fetch)
+		{
+			$fid2orthologs->{$row->[0]}{$row->[1]} += 1;
+		}
+
+		foreach my $fid (keys %$fid2orthologs)
+		{
+			push @{$return->{$fid}}, keys %{$fid2orthologs->{$fid}};
+		}
 	}
 
     #END fids_to_eukaryotic_orthologs
