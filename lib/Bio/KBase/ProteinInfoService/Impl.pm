@@ -1011,7 +1011,8 @@ sub fids_to_orthologs
 
     foreach my $fid (keys %$fids2externalIds) {
 	# run the orthologs query for every locusId that was returned for the fid
-	foreach my $locusId ( @{$fids2externalIds->{$fid}}) {
+	foreach my $locusId ( ${$fids2externalIds->{$fid}}[0]) {
+		warn "orthologs for $locusId";
 	    my $gene = Bio::KBase::ProteinInfoService::Gene::new( locusId => $locusId);
 	    my $moOrthologList = $gene->getOrthologListRef();
             $return_temp->{$fid} = {} unless defined( $return_temp->{$fid});
@@ -1032,7 +1033,7 @@ sub fids_to_orthologs
 	    $kbOrthologs{$ortholog} = undef;
 	}
 	$return->{$fid} = [];
-	push @{$return->{$fid}}, keys %kbOrthologs;
+	push @{$return->{$fid}}, sort keys %kbOrthologs;
     }
 		     
 
