@@ -1011,6 +1011,9 @@ sub fids_to_orthologs
 
     foreach my $fid (keys %$fids2externalIds) {
 	# run the orthologs query for every locusId that was returned for the fid
+	# new cheat: use the first locusId returned in order
+	# to reduce number of queries (assuming that equivalent
+	# MD5s should return equivalent orthologs)
 	foreach my $locusId ( ${$fids2externalIds->{$fid}}[0]) {
 		warn "orthologs for $locusId";
 	    my $gene = Bio::KBase::ProteinInfoService::Gene::new( locusId => $locusId);
