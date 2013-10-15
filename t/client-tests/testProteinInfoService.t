@@ -70,7 +70,7 @@ kb|g.1870.peg.3069
 );
 # fids_to_orthologs is horribly slow, so test only one fid
 my @good_ortholog_fids = qw(
-kb|g.3405.peg.674
+kb|g.3562.peg.1886
 );
 
 # this peg may cause problems with methods that query lots of rows
