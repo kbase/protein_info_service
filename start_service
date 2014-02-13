@@ -1,12 +1,12 @@
 #!/bin/sh
 echo starting protein_info_service server.
-export PERL5LIB=$PERL5LIB:/kb/deployment/lib
-export KB_DEPLOYMENT_CONFIG=/kb/deployment/deployment.cfg
+export KB_DEPLOYMENT_CONFIG=$KB_TOP/deployment.cfg
 export SERVICE=protein_info_service
+export SERVICE_DIR=$KB_TOP/services/$SERVICE
 #uncomment to debug: export STARMAN_DEBUG=1
-/kb/runtime/bin/starman --listen :7057 --pid /kb/deployment/services/protein_info_service/service.pid --daemonize \
-  --access-log /kb/deployment/services/protein_info_service/log/access.log \
-  --error-log /kb/deployment/services/protein_info_service/log/error.log \
-  /kb/deployment/lib/ProteinInfoService.psgi
+$KB_RUNTIME/bin/starman --listen :7057 --pid $SERVICE_DIR/service.pid --daemonize \
+  --access-log $SERVICE_DIR/log/access.log \
+  --error-log $SERVICE_DIR/log/error.log \
+  $KB_TOP/lib/ProteinInfoService.psgi
 echo protein_info_service server is listening on port 7057.
 

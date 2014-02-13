@@ -1,4 +1,4 @@
-#!/kb/runtime/bin/perl
+#!/usr/bin/env perl
 use strict;
 no strict "refs";
 use warnings;
