@@ -72,15 +72,6 @@ sub new
                 }
             }
 
-	# on devdb1.newyork
-	my $dbms='mysql';
-	my $dbName='***REMOVED***';
-	my $user='***REMOVED***';
-	my $pass='***REMOVED***';
-	my $port=3306;
-	my $dbhost='***REMOVED***';
-	my $sock='';
-	
         my $dbKernel = DBKernel->new(
 		$params{dbms}, $params{dbname},
 		 $params{user}, $params{pass}, $params{port},
