@@ -191,7 +191,7 @@ deploy-server-scripts:
 	@echo "echo trying to stop $(SERVICE) server." >> ./stop_service
 	@echo "pid_file=$(PID_FILE)" >> ./stop_service
 	@echo "if [ ! -f \$$pid_file ] ; then " >> ./stop_service
-	@echo "  echo \"No pid file: \$$pid_file found for server $(SERVICE)." >> ./stop_service
+	@echo "  echo No pid file: \$$pid_file found for server $(SERVICE)." >> ./stop_service
 	@echo "exit 1" >> ./stop_service
 	@echo "fi" >> ./stop_service
 	@echo "pid=\$$(cat \$$pid_file)" >> ./stop_service
