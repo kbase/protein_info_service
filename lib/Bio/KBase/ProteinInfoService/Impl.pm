@@ -25,7 +25,7 @@ use Data::Dumper;
 use Config::Simple;
 
 use Bio::KBase;
-use Bio::KBase::MOTranslationService::Impl;
+use Bio::KBase::MOTranslationService::Client;
 use DBKernel;
 
 # This use statement drags in a whole boatload of MO stuff along with
@@ -50,7 +50,7 @@ sub new
 	my $kbCDM = $kb->central_store;
 	# Load the translation service implementation directly to avoid timeouts and overhead from
         # rpc transport
-	my $kbMOT = Bio::KBase::MOTranslationService::Impl->new();
+	my $kbMOT = Bio::KBase::MOTranslationService::Client->new();
 
         # Need to initialize the database handler for that Bio::KBase::ProteinInfoService::Gene depends on
         # the GenomicsUtils module caches the database handle internally
