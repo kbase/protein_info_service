@@ -48,9 +48,6 @@ sub new
 	my $kb = Bio::KBase->new();
 #	my $kbIdServer = $kb->id_server();
 	my $kbCDM = $kb->central_store;
-	# Load the translation service implementation directly to avoid timeouts and overhead from
-        # rpc transport
-	my $kbMOT = Bio::KBase::MOTranslationService::Client->new();
 
         # Need to initialize the database handler for that Bio::KBase::ProteinInfoService::Gene depends on
         # the GenomicsUtils module caches the database handle internally
@@ -61,7 +58,7 @@ sub new
 
             my $config = Config::Simple->new();
             $config->read($configFile);
-            my @paramList = qw(dbname sock user pass dbhost port dbms);
+            my @paramList = qw(dbname sock user pass dbhost port dbms translation-url);
 	    my %params;
             foreach my $param (@paramList)
             {
@@ -71,6 +68,10 @@ sub new
                     $params{$param} = $value;
                 }
             }
+
+	# Load the translation service implementation directly to avoid timeouts and overhead from
+        # rpc transport
+	my $kbMOT = Bio::KBase::MOTranslationService::Client->new($params{translation-url});
 
         my $dbKernel = DBKernel->new(
 		$params{dbms}, $params{dbname},
