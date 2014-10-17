@@ -71,7 +71,7 @@ sub new
 
 	# Load the translation service implementation directly to avoid timeouts and overhead from
         # rpc transport
-	my $kbMOT = Bio::KBase::MOTranslationService::Client->new($params{translation-url});
+	my $kbMOT = Bio::KBase::MOTranslationService::Client->new($params{'translation-url'});
 
         my $dbKernel = DBKernel->new(
 		$params{dbms}, $params{dbname},
